@@ -16,12 +16,17 @@
 
 [(Back to top)](#table-of-contents)
 
+## Design
+
+[(Back to top)](#table-of-contents)
+
 ## Usage
 
 #### For Developers(Beta version)
 
+##### Environment
+
 ```
-*Environment
 git clone https://github.com/huangyukun26/BJFU-Database-Course-Design.git
 -- It is recommended to use a virtual conda environment
 conda create -n BDCD python==3.8
@@ -29,8 +34,11 @@ conda activate BDCD
 pip install django
 pip install mysqlclient
 pip install Pillow
+```
 
-*initialization
+##### Initialization For Django
+
+```
 cd Source/src
 Modify the 'database' in the 'setting' file
 my database eg:
@@ -50,19 +58,28 @@ DATABASES = {
 cd ..
 python manage.py migrate
 
-**after modify database
+**after modify database(if)
 python manage.py makemigrations mentor_student
 python manage.py migrate
-*The above two commands must be executed every time the database is modified.!!*
-
-*view in the web
-python manage.py runserver
-Visit the browser address http://127.0.0.1:8000/
+***The above two commands must be executed every time the database is modified.!!***
 ```
 
-[(Back to top)](#table-of-contents)
+##### Initialization For Vue
 
-## Design
+```
+cd frontms
+npm install
+```
+
+##### View In The Web
+
+```
+cd frontms
+npm run serve
+cd ..
+python manage.py runserver8
+Visit the browser address http://127.0.0.1:8080/
+```
 
 [(Back to top)](#table-of-contents)
 
@@ -70,7 +87,8 @@ Visit the browser address http://127.0.0.1:8000/
 
 #### Technology Stack
 
-Django MySQL8.0
+Django MySQL8.0 Vue3.0
+
 [(Back to top)](#table-of-contents)
 
 ## Contribute
