@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'mentor_student',
+    'corsheaders',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -37,6 +39,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+]
+
+# 允许 localhost:8080 的跨域请求
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
 ]
 
 ROOT_URLCONF = "src.urls"
