@@ -29,11 +29,9 @@
 ```
 git clone https://github.com/huangyukun26/BJFU-Database-Course-Design.git
 -- It is recommended to use a virtual conda environment
-conda create -n BDCD python==3.8
-conda activate BDCD
-pip install django
-pip install mysqlclient
-pip install Pillow
+cd Source
+conda env create -f environment.yaml
+conda activate mentor_student
 ```
 
 ##### Initialization For Django
