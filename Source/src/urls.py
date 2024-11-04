@@ -16,10 +16,16 @@ Including another URLconf
 """
 
 # urls.py
+
 from django.urls import path
-from mentor_student.views import submit_applicant_info
+from mentor_student import views
 
 urlpatterns = [
-    path('api/submit_applicant_info/', submit_applicant_info, name='submit_applicant_info'),
+    path("api/login/", views.login, name="login"),
+    path('api/generate_captcha/', views.generate_captcha, name='generate_captcha'),
 ]
+
+
+
+
 

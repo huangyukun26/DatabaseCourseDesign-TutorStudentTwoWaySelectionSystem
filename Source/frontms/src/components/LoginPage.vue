@@ -1,0 +1,242 @@
+
+<template>
+  <div class="logo">
+      Beijing Forestry University Master’s Admissions System By Four Stopwatch Group
+    </div>
+  <div class="login-container">
+
+    <img src="/images/loginpage.jpg" alt="My Image" class="cover-image" />
+
+
+    <div class="welcome">
+      欢迎报考北京林业大学！
+    </div>
+
+    <div class="login-box">
+      <div class="logo-area">
+        <h1>系统登录</h1>
+
+        <form @submit.prevent="login">
+          <!-- ID -->
+          <div class="form-group">
+            <label for="userId">用户 ID:</label>
+            <input type="text" v-model="applicantId" required placeholder="请输入用户 ID" />
+          </div>
+
+          <!-- 密码 -->
+          <div class="form-group">
+            <label for="password">密码:</label>
+            <input type="password" v-model="password" required placeholder="请输入密码" />
+            <div class="link-group">
+            <a href="/forgot-password">忘记密码?</a>
+            <a href="/help">使用帮助</a>
+            </div>
+          </div>
+
+          <!-- 验证码 -->
+          <div class="form-group">
+            <label for="captcha">验证码:</label>
+            <input type="text" v-model="captchaInput" required placeholder="请输入验证码" />
+            <img :src="captchaUrl" alt="验证码" class="captcha-image" @click="refreshCaptcha" />
+          </div>
+
+          <!-- 登录按钮 -->
+          <button type="submit" class="login-button">登录</button>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+
+export default {
+  data() {
+    return {
+      applicantId: '',
+      password: '',
+      captchaInput: '', // 用户输入的验证码
+      captchaUrl: 'http://localhost:8000/api/generate_captcha?' + new Date().getTime() // 默认验证码图片 URL
+    };
+  },
+
+  methods: {
+    login() {
+      if (!this.applicantId || !this.password || !this.captchaInput) {
+        alert("请填写所有信息！");
+        return;
+      }
+
+      fetch("http://localhost:8000/api/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: this.applicantId,
+          password: this.password,
+          captcha: this.captchaInput
+        }),
+        credentials: 'include' // 启用会话传递
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          localStorage.setItem("isAuthenticated", "true");
+          this.$router.push({ name: "StudentDashboard" });
+        } else {
+          alert("登录失败，请检查信息是否正确");
+        }
+      })
+      .catch(error => console.error("登录请求失败：", error));
+    },
+    refreshCaptcha() {
+      // 更新验证码图片 URL，确保生成新验证码
+      this.captchaUrl = 'http://localhost:8000/api/generate_captcha?' + new Date().getTime();
+    }
+  }
+
+};
+</script>
+
+<style scoped>
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* 禁用滚动条 */
+}
+
+.login-container {
+  position: relative; /* 确保z-index在子元素上生效 */
+  align-items: center;
+  eight: calc(100vh - 100px); /* 去除 logo 的高度 */
+  background-color: #f7f7f7;
+}
+
+.cover-image {
+  position: fixed; /* 使图片覆盖整个背景 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1; /* 设置较低的 z-index，确保在其他元素下方 */
+
+}
+
+.logo{
+  position: relative; /* 确保 logo 显示在前景层 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 30px;
+  height: 100px;
+  background-color: RGB(30, 115, 71);
+  color: white;
+  font-size: 36px;
+  font-weight: bold;
+  z-index: 3;
+}
+
+.welcome {
+  background-color: rgba(0, 0, 0, 0);
+  align-content: center;
+  position: absolute;
+  top: 400px; /* 调整顶部距离以适应布局 */
+  left: 100px; /* 调整左侧距离使其位于白色框外 */
+  z-index: 3; /* 确保覆盖在其他元素之上 */
+  color: white; /* 文字颜色改为黑色以便于阅读 */
+  font-size: 100px; /* 调整字体大小 */
+
+}
+
+.login-box {
+  background-color: white;
+  position: relative; /* 相对定位，使子元素的绝对定位相对于它 */
+  float: right; /* 将盒子浮动到右侧 */
+  width: 500px; /* 缩小盒子的宽度 */
+  height: 700px;
+  margin-top: 150px;
+  margin-right: 150px;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 3; /* 确保覆盖在其他元素之上 */
+}
+
+.logo-area {
+  flex: 1; /* 占据剩余空间 */
+  text-align: center;
+  margin-right: 20px; /* 根据需要调整间距 */
+}
+
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333333;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+label {
+  display: block;
+  font-size: 20px;
+  color: #666666;
+  margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  height: 60px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.captcha-image {
+  display: block;
+  margin-top: 0.5rem;
+  width: 100px;
+  height: auto;
+}
+
+.login-button {
+  width: 100%;
+  height: 60px;
+  padding: 10px;
+  font-size: 20px;
+  background-color: rgb(51, 132, 93);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #45a049;
+}
+
+.link-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px; /* 调整与输入框的间距 */
+}
+
+.link-group a {
+        text-decoration: none;
+        color: rgb(51, 132, 93);
+    }
+    .link-group a:hover {
+        text-decoration: underline;
+    }
+</style>
