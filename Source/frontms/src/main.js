@@ -1,7 +1,4 @@
-/*import { createApp } from 'vue'
-import App from './App.vue'
 
-createApp(App).mount('#app')*/
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';  // 导入 Vue Router 配置

@@ -1,0 +1,35 @@
+name: mentor_student
+channels:
+  - defaults
+dependencies:
+  - ca-certificates=2024.9.24=haa95532_0
+  - openssl=1.1.1w=h2bbff1b_0
+  - pip=24.2=py38haa95532_0
+  - python=3.8.0=hff0d562_2
+  - setuptools=75.1.0=py38haa95532_0
+  - sqlite=3.45.3=h2bbff1b_0
+  - vc=14.40=h2eaa2aa_1
+  - vs2015_runtime=14.40.33807=h98bb1dd_1
+  - wheel=0.44.0=py38haa95532_0
+  - pip:
+    - asgiref==3.8.1
+    - backports-zoneinfo==0.2.1
+    - captcha==0.6.0
+    - certifi==2024.8.30
+    - charset-normalizer==3.4.0
+    - django==4.2.16
+    - django-cors-headers==4.4.0
+    - djangorestframework==3.15.2
+    - docopt==0.6.2
+    - idna==3.10
+    - mysqlclient==2.0.1
+    - pillow==10.4.0
+    - pipreqs==0.4.13
+    - pyjwt==2.9.0
+    - requests==2.32.3
+    - sqlparse==0.5.1
+    - typing-extensions==4.12.2
+    - tzdata==2024.2
+    - urllib3==2.2.3
+    - yarg==0.1.10
+
