@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -70,13 +72,6 @@ class MentorCatalogAssignment(models.Model):
     has_admission_eligibility = models.BooleanField(default=False, verbose_name="是否具备招生资格")
 
 
-#APPLICANT_SCORE 表
-class ApplicantScore(models.Model):
-    score_id = models.AutoField(primary_key=True)
-    applicant = models.ForeignKey(Applicant, on_delete=models.CASCADE, verbose_name="考生ID")
-    preliminary_score = models.FloatField(verbose_name="初试成绩")
-    final_score = models.FloatField(verbose_name="复试成绩")
-
 #MENTOR_APPLICANT_PREFERENCE 表
 class MentorApplicantPreference(models.Model):
     preference_id = models.AutoField(primary_key=True)
@@ -127,11 +122,13 @@ class SystemRole(models.Model):
 #USER_ROLE 表
 class UserRole(models.Model):
     user_role_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField()
-    role = models.ForeignKey(SystemRole, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,default=0)
+    object_id = models.PositiveIntegerField(default=0)
+    user = GenericForeignKey('content_type', 'object_id')
+    role = models.ForeignKey('SystemRole', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.user_id} - {self.role.name}"
+        return f"{self.user} - {self.role.name}"
 
 
 #SYSTEM_ACTIVITY 表
@@ -140,16 +137,22 @@ class SystemActivity(models.Model):
     role = models.ForeignKey(SystemRole, on_delete=models.CASCADE, verbose_name="角色ID")
     activity = models.TextField(verbose_name="核心业务需求活动描述")
 
-# 关联信号，创建 Applicant 后自动生成 UserRole 记录
 @receiver(post_save, sender=Applicant)
 def create_user_role_for_applicant(sender, instance, created, **kwargs):
     if created:
         role, _ = SystemRole.objects.get_or_create(name='Student')
-        UserRole.objects.create(user_id=instance.applicant_id, role=role)
+        UserRole.objects.create(
+            content_type=ContentType.objects.get_for_model(Applicant),
+            object_id=instance.applicant_id,
+            role=role
+        )
 
-# 关联信号，创建 Mentor 后自动生成 UserRole 记录
 @receiver(post_save, sender=Mentor)
 def create_user_role_for_mentor(sender, instance, created, **kwargs):
     if created:
         role, _ = SystemRole.objects.get_or_create(name='Mentor')
-        UserRole.objects.create(user_id=instance.mentor_id, role=role)
+        UserRole.objects.create(
+            content_type=ContentType.objects.get_for_model(Mentor),
+            object_id=instance.mentor_id,
+            role=role
+        )
