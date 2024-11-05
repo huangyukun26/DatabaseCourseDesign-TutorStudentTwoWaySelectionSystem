@@ -1,0 +1,47 @@
+@startuml
+actor "Applicant" as Applicant
+actor "Mentor" as Mentor
+actor "Admin" as Admin
+
+usecase "Submit Personal Information" as UC1
+usecase "Confirm Scores" as UC2
+usecase "Apply for Mentor" as UC3
+usecase "Check Admission Status" as UC4
+
+usecase "Approve Applicant" as UC5
+usecase "Admission Catalog" as UC6
+usecase "Assign Mentor to Catalog" as UC7
+usecase "Review Applicant Info" as UC8
+usecase "Update Admission Status" as UC9
+
+usecase "Manage Roles" as UC10
+usecase "Monitor System Activities" as UC11
+usecase "Update System Configuration" as UC12
+usecase "Monitor Mentor Activities" as UC13
+usecase "View Admission Catalog" as UC14
+
+Applicant -- UC1 : "提交个人信息"
+Applicant -- UC2 : "确认成绩"
+Applicant -- UC3 : "申请导师"
+Applicant -- UC4 : "查看录取状态"
+
+Mentor -- UC5 : "审核考生申请"
+Mentor -- UC6 : "确认招生目录"
+Mentor -- UC7 : "分配导师到目录"
+Mentor -- UC8 : "查看考生信息"
+Mentor -- UC14 : "查看招生目录"
+
+Admin -- UC10 : "管理角色"
+Admin -- UC11 : "监控系统活动"
+Admin -- UC12 : "更新系统配置"
+Admin -- UC13 : "监控导师活动"
+Admin -- UC6 : "管理招生目录"
+Admin -- UC7 : "分配导师到目录"
+Admin -- UC9 : "更新录取状态"
+
+UC1 ..> UC8 : "共享考生信息"
+UC2 ..> UC8 : "共享考生成绩"
+UC3 <.. UC5 : "确认关联审核"
+UC6 <.. UC14 : "关联招生目录查看"
+UC9 <.. UC4 : "更新后考生可查看"
+@enduml
