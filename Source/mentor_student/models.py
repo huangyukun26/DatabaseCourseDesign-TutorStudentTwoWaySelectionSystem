@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 #SUBJECT 表
 class Subject(models.Model):
@@ -110,19 +112,26 @@ class ApplicantScore(models.Model):
 
 #SYSTEM_ROLE 表
 class SystemRole(models.Model):
+    ROLE_CHOICES = [
+        ('Student', 'Student'),
+        ('Mentor', 'Mentor'),
+        ('Admin', 'Admin')
+    ]
     role_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, verbose_name="角色名称")
-    description = models.TextField(blank=True, verbose_name="角色描述")
+    name = models.CharField(max_length=255, choices=ROLE_CHOICES, unique=True)
+    description = models.TextField()
 
     def __str__(self):
         return self.name
 
-
 #USER_ROLE 表
 class UserRole(models.Model):
     user_role_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(verbose_name="用户ID")
-    role = models.ForeignKey(SystemRole, on_delete=models.CASCADE, verbose_name="角色ID")
+    user_id = models.IntegerField()
+    role = models.ForeignKey(SystemRole, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user_id} - {self.role.name}"
 
 
 #SYSTEM_ACTIVITY 表
@@ -131,4 +140,16 @@ class SystemActivity(models.Model):
     role = models.ForeignKey(SystemRole, on_delete=models.CASCADE, verbose_name="角色ID")
     activity = models.TextField(verbose_name="核心业务需求活动描述")
 
+# 关联信号，创建 Applicant 后自动生成 UserRole 记录
+@receiver(post_save, sender=Applicant)
+def create_user_role_for_applicant(sender, instance, created, **kwargs):
+    if created:
+        role, _ = SystemRole.objects.get_or_create(name='Student')
+        UserRole.objects.create(user_id=instance.applicant_id, role=role)
 
+# 关联信号，创建 Mentor 后自动生成 UserRole 记录
+@receiver(post_save, sender=Mentor)
+def create_user_role_for_mentor(sender, instance, created, **kwargs):
+    if created:
+        role, _ = SystemRole.objects.get_or_create(name='Mentor')
+        UserRole.objects.create(user_id=instance.mentor_id, role=role)

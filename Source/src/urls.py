@@ -17,10 +17,14 @@ Including another URLconf
 
 # urls.py
 
-from django.urls import path
 from mentor_student import views
+from django.contrib import admin
+from django.urls import path, include
+
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('mentor_student.urls')),
     path("api/login/", views.login, name="login"),
     path('api/generate_captcha/', views.generate_captcha, name='generate_captcha'),
 ]

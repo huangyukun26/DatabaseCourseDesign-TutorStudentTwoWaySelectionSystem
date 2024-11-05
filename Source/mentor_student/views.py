@@ -6,6 +6,13 @@ import json
 from mentor_student.models import Applicant
 import random
 import string
+from rest_framework import viewsets
+from rest_framework.response import Response
+from .models import Applicant
+from .serializers import ApplicantSerializer
+from rest_framework.decorators import action
+from rest_framework import status
+
 @csrf_exempt
 def login(request):
     if request.method == "POST":
@@ -53,5 +60,30 @@ def generate_captcha(request):
     return HttpResponse(captcha_image, content_type='image/png')
 
 
+class ApplicantViewSet(viewsets.ModelViewSet):
+    queryset = Applicant.objects.all()
+    serializer_class = ApplicantSerializer
 
+    #自定义视图，返回考生的所有基本信息
+    @action(detail=True, methods=['get'])
+    def get_basic_info(self, request, pk=None):
+        try:
+            applicant = self.get_object()
+        except Applicant.DoesNotExist:
+            return Response({'error': 'Applicant not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        data = {
+            'applicant_id': applicant.applicant_id,
+            'name': applicant.name,
+            'birth_date': applicant.birth_date,
+            'id_card_number': applicant.id_card_number,
+            'origin': applicant.origin,
+            'undergraduate_major': applicant.undergraduate_major,
+            'email': applicant.email,
+            'phone': applicant.phone,
+            'undergraduate_school': applicant.undergraduate_school,
+            'school_type': applicant.school_type,
+            'resume': applicant.resume,
+        }
+        return Response(data, status=status.HTTP_200_OK)
 
