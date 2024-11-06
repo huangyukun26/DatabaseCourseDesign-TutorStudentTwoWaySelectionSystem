@@ -2,11 +2,10 @@ from django.http import HttpResponse
 from captcha.image import ImageCaptcha
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import json
 
 from rest_framework.permissions import IsAuthenticated
 
-from mentor_student.models import Applicant, Mentor, MentorApplicantPreference
+from mentor_student.models import Applicant, Mentor, MentorApplicantPreference, ApplicantScore
 import random
 import string
 from rest_framework import viewsets
@@ -266,6 +265,54 @@ def get_applicant_volunteers(request, applicant_id):
             'data': volunteer_data
         })
         
+    except Applicant.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': '考生不存在'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_applicant_scores(request, applicant_id):
+    """
+    获取考生成绩信息
+    """
+    try:
+        # 验证考生是否存在
+        applicant = Applicant.objects.get(applicant_id=applicant_id)
+        
+        # 获取该考生的成绩
+        try:
+            score = ApplicantScore.objects.get(applicant=applicant)
+            score_data = {
+                'applicant_id': applicant_id,
+                'applicant_name': applicant.name,
+                'preliminary_score': float(score.preliminary_score),
+                'final_score': float(score.final_score),
+                'total_score': float(score.preliminary_score + score.final_score),
+                'undergraduate_info': {
+                    'major': applicant.undergraduate_major,
+                    'school': applicant.undergraduate_school,
+                    'school_type': applicant.school_type
+                }
+            }
+            
+            return JsonResponse({
+                'status': 'success',
+                'data': score_data
+            })
+            
+        except ApplicantScore.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': '暂无成绩信息'
+            }, status=404)
+            
     except Applicant.DoesNotExist:
         return JsonResponse({
             'status': 'error',

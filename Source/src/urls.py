@@ -26,11 +26,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('mentor_student.urls')),
     path("api/login/", views.login, name="login"),
+    path('', include('mentor_student.urls')), 
     path('api/generate_captcha/', views.generate_captcha, name='generate_captcha'),
     path('api/volunteer/submit', views.submit_volunteer, name='submit_volunteer'),
     path('api/volunteer/status/<str:student_id>', views.get_volunteer_status, name='get_volunteer_status'),
     path('api/applicant/volunteers/<str:applicant_id>', views.get_applicant_volunteers, name='get_applicant_volunteers'),
     path('api/mentors/', views.get_mentors, name='get_mentors'),
+    path('api/applicant/scores/<str:applicant_id>', views.get_applicant_scores, name='get_applicant_scores'),
 ]
 
 

@@ -3,6 +3,7 @@ import LoginPage from '@/components/LoginPage.vue';  // 登录页面组件
 import StudentDashboard from '@/components/StudentDashboard.vue';  // 学生仪表板页面组件
 import BasicInfo from '@/components/BasicInfo.vue';  // 导入基本信息组件
 import StudentVolunteerSelection from "@/components/StudentVolunteerSelection.vue";
+import StudentScoreQuery from "@/components/StudentScoreQuery.vue";
 
 const routes = [
   {
@@ -19,21 +20,24 @@ const routes = [
     {
       path: 'basic-info',
       name: 'basic-info',
-      component: BasicInfo
+      component: BasicInfo,
+      meta: { requiresAuth: true }
     },
     {
-    path: '/student-volunteer-selection',
+    path: 'volunteer',
     name: 'student-volunteer-selection',
-    component: StudentVolunteerSelection
-  }
+    component: StudentVolunteerSelection,
+    meta: { requiresAuth: true }
+    },
+    {
+    path: 'scores',
+    name: 'student-scores',
+    component: StudentScoreQuery,
+    meta: { requiresAuth: true }
+    }
+
   ]
   },
-  {
-    path: '/basic-info',  // 添加基本信息的路由
-    name: 'BasicInfo',
-    component: BasicInfo,
-    meta: { requiresAuth: true }
-  }
 
 ];
 
