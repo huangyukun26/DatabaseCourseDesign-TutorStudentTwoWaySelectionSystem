@@ -113,7 +113,7 @@ export default {
   border: 1px solid #ccc;
   border-radius: 5px;
   max-height: 800px;
-  overflow-y: auto; /* 启用垂直滚动条 */
+  overflow-y: auto; 
 }
 
 .announcement h1 {

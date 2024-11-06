@@ -123,29 +123,29 @@ export default {
 html, body {
   height: 100%;
   margin: 0;
-  overflow: hidden; /* 禁用滚动条 */
+  overflow: hidden; 
 }
 
 .login-container {
-  position: relative; /* 确保z-index在子元素上生效 */
+  position: relative; 
   align-items: center;
-  eight: calc(100vh - 100px); /* 去除 logo 的高度 */
+  eight: calc(100vh - 100px); 
   background-color: #f7f7f7;
 }
 
 .cover-image {
-  position: fixed; /* 使图片覆盖整个背景 */
+  position: fixed; 
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: 1; /* 设置较低的 z-index，确保在其他元素下方 */
+  z-index: 1; 
 
 }
 
 .logo{
-  position: relative; /* 确保 logo 显示在前景层 */
+  position: relative; 
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -162,32 +162,32 @@ html, body {
   background-color: rgba(0, 0, 0, 0);
   align-content: center;
   position: absolute;
-  top: 400px; /* 调整顶部距离以适应布局 */
-  left: 100px; /* 调整左侧距离使其位于白色框外 */
-  z-index: 3; /* 确保覆盖在其他元素之上 */
-  color: white; /* 文字颜色改为黑色以便于阅读 */
-  font-size: 100px; /* 调整字体大小 */
+  top: 400px; 
+  left: 100px; 
+  z-index: 3; 
+  color: white; 
+  font-size: 100px; 
 
 }
 
 .login-box {
   background-color: white;
-  position: relative; /* 相对定位，使子元素的绝对定位相对于它 */
-  float: right; /* 将盒子浮动到右侧 */
-  width: 500px; /* 缩小盒子的宽度 */
+  position: relative; 
+  float: right; 
+  width: 500px; 
   height: 700px;
   margin-top: 150px;
   margin-right: 150px;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 3; /* 确保覆盖在其他元素之上 */
+  z-index: 3; 
 }
 
 .logo-area {
-  flex: 1; /* 占据剩余空间 */
+  flex: 1; 
   text-align: center;
-  margin-right: 20px; /* 根据需要调整间距 */
+  margin-right: 20px; 
 }
 
 
@@ -247,7 +247,7 @@ input[type="password"] {
 .link-group {
   display: flex;
   justify-content: space-between;
-  margin-top: 5px; /* 调整与输入框的间距 */
+  margin-top: 5px;
 }
 
 .link-group a {

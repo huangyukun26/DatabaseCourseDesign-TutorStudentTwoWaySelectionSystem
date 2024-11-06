@@ -72,7 +72,7 @@ export default {
     const loading = ref(false)
     const error = ref(null)
 
-    // 获取导师列表
+    //获取导师列表
    const fetchMentors = async () => {
       try {
         loading.value = true
@@ -95,7 +95,7 @@ export default {
       }
     }
 
-    // 获取当前登录的考生ID
+    //获取当前登录的考生ID
     const fetchApplicantId = () => {
       try {
         const userStr = localStorage.getItem('user')
@@ -116,14 +116,14 @@ export default {
       }
     }
 
-    // 获取已提交的志愿信息
+    //获取已提交的志愿信息
     const fetchExistingVolunteers = async () => {
       if (!applicantId.value) return
 
       try {
         const response = await axios.get(`http://localhost:8000/api/applicant/volunteers/${applicantId.value}`)
         if (response.data.status === 'success' && response.data.data.length > 0) {
-          // 更新导师列表中的选择状态
+          //更新导师列表中的选择状态
           const existingChoices = response.data.data
           mentorList.value = mentorList.value.map(mentor => {
             const existingChoice = existingChoices.find(
@@ -145,24 +145,24 @@ export default {
       }
     }
 
-    // 检查志愿顺序是否已被使用
+    //检查志愿顺序是否已被使用
     const isRankUsed = (rank) => {
       return mentorList.value.some(mentor => mentor.rank === rank)
     }
 
-    // 获取指定志愿顺序的导师姓名
+    //获取指定志愿顺序的导师姓名
     const getSelectedMentorName = (rank) => {
       const mentor = mentorList.value.find(m => m.rank === rank)
       return mentor ? mentor.name : '未选择'
     }
 
-    // 验证选择是否有效
+    //验证选择是否有效
     const isValidSelection = computed(() => {
       const selectedCount = mentorList.value.filter(m => m.rank !== null).length
       return selectedCount === 3
     })
 
-    // 提交志愿
+    //提交志愿
     const submitVolunteer = async () => {
       if (!isValidSelection.value) {
         alert('请选择三个志愿')
@@ -198,7 +198,7 @@ export default {
 
         if (response.data.status === 'success') {
           alert('志愿提交成功！')
-          // 提交成功后重新获取最新的志愿信息
+          //提交成功后重新获取最新的志愿信息
           await fetchExistingVolunteers()
         } else {
           throw new Error(response.data.message || '提交失败')
@@ -213,10 +213,10 @@ export default {
     }
 
 
-    // 组件挂载时获取数据
+    //组件挂载时获取数据
     onMounted(async () => {
       if (fetchApplicantId()) {
-        await fetchMentors() // fetchMentors 会自动调用 fetchExistingVolunteers
+        await fetchMentors() //fetchMentors 会自动调用 fetchExistingVolunteers
       }
     })
 

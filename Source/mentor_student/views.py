@@ -47,7 +47,7 @@ def login(request):
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
-    # 如果请求方法不是 POST，则返回错误响应
+    #如果请求方法不是 POST，则返回错误响应
     return JsonResponse({"success": False, "error": "无效的请求方法"})
 
 
@@ -72,7 +72,7 @@ class ApplicantViewSet(viewsets.ModelViewSet):
     serializer_class = ApplicantSerializer
     #permission_classes = [IsAuthenticated]
 
-    # 自定义操作：获取考生基本信息
+    #自定义操作：获取考生基本信息
     @action(detail=True, methods=['get'], url_path='basic-info')
     def get_basic_info(self, request, pk=None):
         try:
@@ -102,13 +102,13 @@ def submit_volunteer(request):
         applicant_id = data.get('applicant_id')
         mentor_choices = data.get('mentor_choices', [])
 
-        # 验证考生是否存在
+        #验证考生是否存在
         try:
             applicant = Applicant.objects.get(applicant_id=applicant_id)
         except ObjectDoesNotExist:
             return JsonResponse({'status': 'error', 'message': '考生不存在'}, status=404)
 
-        # 验证并创建志愿选择
+        #验证并创建志愿选择
         for choice in mentor_choices:
             mentor_id = choice.get('mentor_id')
             rank = choice.get('rank')
@@ -118,7 +118,7 @@ def submit_volunteer(request):
             except ObjectDoesNotExist:
                 return JsonResponse({'status': 'error', 'message': f'导师 {mentor_id} 不存在'}, status=404)
 
-            # 检查是否已存在该志愿
+            #检查是否已存在该志愿
             preference, created = MentorApplicantPreference.objects.get_or_create(
                 applicant=applicant,
                 mentor=mentor,
@@ -126,7 +126,7 @@ def submit_volunteer(request):
             )
 
             if not created:
-                # 更新已存在的志愿顺序
+                #更新已存在的志愿顺序
                 preference.preference_rank = rank
                 preference.save()
 
@@ -153,7 +153,7 @@ def get_volunteer_status(request, applicant_id):
     Method: GET
     """
     try:
-        # 验证考生是否存在
+        #验证考生是否存在
         try:
             applicant = Applicant.objects.get(applicant_id=applicant_id)
         except Applicant.DoesNotExist:
@@ -162,12 +162,12 @@ def get_volunteer_status(request, applicant_id):
                 'message': f'考生ID {applicant_id} 不存在'
             }, status=404)
 
-        # 获取该考生的所有志愿选择
+        #获取该考生的所有志愿选择
         preferences = MentorApplicantPreference.objects.filter(
             applicant=applicant
         ).select_related('mentor').order_by('preference_rank')
 
-        # 构建返回数据
+        #构建返回数据
         choices = []
         for pref in preferences:
             choices.append({
@@ -187,7 +187,7 @@ def get_volunteer_status(request, applicant_id):
         })
 
     except Exception as e:
-        print(f"获取志愿状态错误: {str(e)}")  # 添加服务器端日志
+        print(f"获取志愿状态错误: {str(e)}")  #添加服务器端日志
         return JsonResponse({
             'status': 'error',
             'message': f'获取志愿状态失败: {str(e)}'
@@ -202,7 +202,7 @@ def get_mentors(request):
         """获取所有导师列表"""
         try:
             mentors = Mentor.objects.all()
-            # 将查询结果转换为列表
+            #将查询结果转换为列表
             mentor_list = []
             for mentor in mentors:
                 mentor_list.append({
@@ -237,15 +237,15 @@ def get_applicant_volunteers(request, applicant_id):
     获取考生已提交的志愿信息
     """
     try:
-        # 验证考生是否存在
+        #验证考生是否存在
         applicant = Applicant.objects.get(applicant_id=applicant_id)
         
-        # 获取该考生的所有志愿选择，按志愿顺序排序
+        #获取该考生的所有志愿选择，按志愿顺序排序
         preferences = MentorApplicantPreference.objects.filter(
             applicant=applicant
         ).select_related('mentor').order_by('preference_rank')
         
-        # 构建返回数据
+        #构建返回数据
         volunteer_data = []
         for pref in preferences:
             volunteer_data.append({
@@ -280,10 +280,10 @@ def get_applicant_scores(request, applicant_id):
     获取考生成绩信息
     """
     try:
-        # 验证考生是否存在
+        #验证考生是否存在
         applicant = Applicant.objects.get(applicant_id=applicant_id)
         
-        # 获取该考生的成绩
+        #获取该考生的成绩
         try:
             score = ApplicantScore.objects.get(applicant=applicant)
             score_data = {
@@ -326,12 +326,12 @@ def get_applicant_scores(request, applicant_id):
 @api_view(['GET'])
 def get_admission_status(request, applicant_id):
     try:
-        # 获取考生的所有志愿信息
+        #获取考生的所有志愿信息
         preferences = MentorApplicantPreference.objects.filter(
             applicant_id=applicant_id
         ).select_related('mentor', 'applicant')
         
-        # 获取考生成绩
+        #获取考生成绩
         try:
             scores = ApplicantScore.objects.get(applicant_id=applicant_id)
             score_info = {
@@ -342,7 +342,7 @@ def get_admission_status(request, applicant_id):
         except ApplicantScore.DoesNotExist:
             score_info = None
 
-        # 整理志愿状态信息
+        #整理志愿状态信息
         preference_status = []
         for pref in preferences:
             preference_status.append({
@@ -353,16 +353,16 @@ def get_admission_status(request, applicant_id):
                 'remarks': pref.remarks
             })
 
-        # 按志愿优先级排序
+        #按志愿优先级排序
         preference_status.sort(key=lambda x: x['rank'])
 
         response_data = {
             'preferences': preference_status,
             'scores': score_info,
-            'overall_status': '待定'  # 默认状态
+            'overall_status': '待定'  #默认状态
         }
 
-        # 确定整体录取状态
+        #确定整体录取状态
         if preferences.filter(status='Accepted').exists():
             response_data['overall_status'] = '已录取'
         elif preferences.filter(status='Pending').exists():

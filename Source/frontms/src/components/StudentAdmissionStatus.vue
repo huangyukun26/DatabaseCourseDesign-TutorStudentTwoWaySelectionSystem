@@ -237,7 +237,7 @@ export default {
   color: #f56c6c;
 }
 
-/* Element Plus 表格样式覆盖 */
+
 :deep(.el-table) {
   --el-table-border-color: #ebeef5;
   --el-table-header-background-color: #f5f7fa;

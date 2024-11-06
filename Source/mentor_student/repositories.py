@@ -17,7 +17,7 @@ def create_applicant(data):
         return applicant
     except IntegrityError as e:
         print(f"Error creating applicant: {e}")
-        return None  # 或者返回错误信息
+        return None
 
 #更新考生信息
 def update_applicant(applicant_id, data):
