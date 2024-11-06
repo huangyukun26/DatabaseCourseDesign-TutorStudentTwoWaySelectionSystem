@@ -50,6 +50,8 @@
 </template>
 
 <script>
+import { userService } from '@/services/userService';
+
 export default {
   data() {
     return {
@@ -67,6 +69,8 @@ export default {
         return;
       }
 
+      console.log('正在尝试登录，applicantId:', this.applicantId);
+
       fetch("http://localhost:8000/api/login/", {
         method: "POST",
         headers: {
@@ -81,12 +85,18 @@ export default {
       })
       .then(response => response.json())
       .then(data => {
+        console.log('登录响应:', data);
+
         if (data.success) {
-          // 修改存储方式，使用统一的 user 对象
-          localStorage.setItem("user", JSON.stringify({
+          // 使用 userService 存储用户信息
+          userService.setUser({
             applicant_id: this.applicantId,
-            isAuthenticated: true
-          }));
+            isAuthenticated: true,
+            loginTime: new Date().toISOString()
+          });
+          
+          console.log('存储的用户信息:', userService.getUser());
+          
           this.$router.push({ name: "StudentDashboard" });
         } else {
           alert("登录失败，请检查信息是否正确");
@@ -102,7 +112,9 @@ export default {
     refreshCaptcha() {
       this.captchaUrl = 'http://localhost:8000/api/generate_captcha?' + new Date().getTime();
     }
-  }
+  },
+
+  
 };
 </script>
 

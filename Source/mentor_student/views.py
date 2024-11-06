@@ -83,7 +83,7 @@ class ApplicantViewSet(viewsets.ModelViewSet):
             serializer = ApplicantSerializer(applicant)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Applicant.DoesNotExist:
-            return Response({'error': 'Applicant not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Applicant not found'}, status=status.HTTP_404_NOT_FOUND)  
 
 @csrf_exempt
 @require_http_methods(["POST"])

@@ -1,9 +1,13 @@
-<!-- BasicInfo.vue -->
 <template>
-  <div class="navigation">主页 -> 基本信息</div>
   <div class="basic-info">
     <h2>基本信息</h2>
-    <div v-if="applicant">
+    <div v-if="loading">
+      <p>加载中...</p>
+    </div>
+    <div v-else-if="error">
+      <p>{{ error }}</p>
+    </div>
+    <div v-else-if="applicant">
       <p><strong>姓名：</strong> {{ applicant.name }}</p>
       <p><strong>出生日期：</strong> {{ applicant.birth_date }}</p>
       <p><strong>身份证号：</strong> {{ applicant.id_card_number }}</p>
@@ -15,41 +19,50 @@
       <p><strong>学校类型：</strong> {{ applicant.school_type }}</p>
       <p><strong>简历：</strong> {{ applicant.resume }}</p>
     </div>
-    <div v-else>
-      <p>加载中...</p>
-    </div>
   </div>
 </template>
 
 <script>
+import { userService } from '@/services/userService';
 import axios from 'axios';
 
 export default {
   data() {
     return {
-      applicant: null
+      applicant: null,
+      loading: false,
+      error: null
     };
   },
+  
   created() {
-    const applicantId = localStorage.getItem('applicant_id');
-    console.log('Applicant ID:', applicantId);  // 输出 applicantId
-    if (!applicantId) {
-      console.error("Applicant ID 未找到，请确保已成功登录并存储 applicant_id。");
+    if (!userService.isAuthenticated()) {
+      this.$router.push({ name: 'Login' });
       return;
     }
-
-    this.fetchApplicantInfo(applicantId);
+    this.getApplicantInfo();
   },
-methods: {
-  async fetchApplicantInfo(applicantId) {
-    try {
-      const response = await axios.get(`http://localhost:8000/api/applicants/${applicantId}/basic-info/`);
-      this.applicant = response.data;
-    } catch (error) {
-      console.error("获取考生信息失败:", error);
+
+  methods: {
+    async getApplicantInfo() {
+      const applicantId = userService.getUserId();
+      if (!applicantId) {
+        this.error = '未找到考生ID，请重新登录';
+        return;
+      }
+
+      try {
+        this.loading = true;
+        const response = await axios.get(`http://localhost:8000/api/applicants/${applicantId}/basic-info/`);
+        this.applicant = response.data;
+      } catch (error) {
+        this.error = '获取考生信息失败';
+        console.error(error);
+      } finally {
+        this.loading = false;
+      }
     }
   }
-}
 };
 </script>
 
@@ -93,9 +106,5 @@ h2 {
   margin-right: 15px;
 }
 
-.navigation {
-  font-size: 14px;
-  color: #606266;
-}
 </style>
 
