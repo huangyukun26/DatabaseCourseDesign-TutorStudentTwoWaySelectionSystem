@@ -1,24 +1,21 @@
 from django.http import HttpResponse
 from captcha.image import ImageCaptcha
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
-from rest_framework.permissions import IsAuthenticated
-
 from mentor_student.models import Applicant, Mentor, MentorApplicantPreference, ApplicantScore
 import random
 import string
 from rest_framework import viewsets
-from rest_framework.response import Response
 from .models import Applicant
 from .serializers import ApplicantSerializer
 from rest_framework.decorators import action
-from rest_framework import status
-
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ObjectDoesNotExist
 import json
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import MentorApplicantPreference, ApplicantScore
 
 @csrf_exempt
 def login(request):
@@ -323,3 +320,60 @@ def get_applicant_scores(request, applicant_id):
             'status': 'error',
             'message': str(e)
         }, status=500)
+
+
+
+@api_view(['GET'])
+def get_admission_status(request, applicant_id):
+    try:
+        # 获取考生的所有志愿信息
+        preferences = MentorApplicantPreference.objects.filter(
+            applicant_id=applicant_id
+        ).select_related('mentor', 'applicant')
+        
+        # 获取考生成绩
+        try:
+            scores = ApplicantScore.objects.get(applicant_id=applicant_id)
+            score_info = {
+                'preliminary_score': scores.preliminary_score,
+                'final_score': scores.final_score,
+                'total_score': scores.preliminary_score + scores.final_score
+            }
+        except ApplicantScore.DoesNotExist:
+            score_info = None
+
+        # 整理志愿状态信息
+        preference_status = []
+        for pref in preferences:
+            preference_status.append({
+                'rank': pref.preference_rank,
+                'mentor_name': pref.mentor.name,
+                'mentor_title': pref.mentor.title,
+                'status': pref.status,
+                'remarks': pref.remarks
+            })
+
+        # 按志愿优先级排序
+        preference_status.sort(key=lambda x: x['rank'])
+
+        response_data = {
+            'preferences': preference_status,
+            'scores': score_info,
+            'overall_status': '待定'  # 默认状态
+        }
+
+        # 确定整体录取状态
+        if preferences.filter(status='Accepted').exists():
+            response_data['overall_status'] = '已录取'
+        elif preferences.filter(status='Pending').exists():
+            response_data['overall_status'] = '待定'
+        elif preferences.filter(status='Rejected').count() == preferences.count():
+            response_data['overall_status'] = '未录取'
+
+        return Response(response_data)
+
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'message': '获取录取状态失败'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

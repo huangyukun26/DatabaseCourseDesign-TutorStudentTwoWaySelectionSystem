@@ -4,7 +4,7 @@
     <div class="menu-item" @click="navigateTo('basic-info')">基本信息</div>
     <div class="menu-item" @click="navigateTo('student-scores')">成绩查询</div>
     <div class="menu-item" @click="navigateTo('student-volunteer-selection')">志愿填报</div>
-    <div class="menu-item">录取状态</div>
+    <div class="menu-item" @click="navigateTo('student-admission-status')">录取状态</div>
   </div>
 </template>
 

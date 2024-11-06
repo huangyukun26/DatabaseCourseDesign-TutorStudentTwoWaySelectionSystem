@@ -4,6 +4,7 @@ import StudentDashboard from '@/components/StudentDashboard.vue';  // 学生仪�
 import BasicInfo from '@/components/BasicInfo.vue';  // 导入基本信息组件
 import StudentVolunteerSelection from "@/components/StudentVolunteerSelection.vue";
 import StudentScoreQuery from "@/components/StudentScoreQuery.vue";
+import StudentAdmissionStatus from "@/components/StudentAdmissionStatus.vue";
 
 const routes = [
   {
@@ -34,6 +35,12 @@ const routes = [
     name: 'student-scores',
     component: StudentScoreQuery,
     meta: { requiresAuth: true }
+    },
+    {
+      path: 'admission-status',
+      name: 'student-admission-status',
+      component: StudentAdmissionStatus,
+      meta: { requiresAuth: true }
     }
 
   ]
