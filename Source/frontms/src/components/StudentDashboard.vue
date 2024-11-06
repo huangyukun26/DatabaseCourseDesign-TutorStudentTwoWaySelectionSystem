@@ -4,6 +4,8 @@
     <div class="main-content">
       <StudentSidebar /> <!-- 左侧功能栏组件 -->
       <div class="content">
+
+        <template v-if="$route.path === '/dashboard'">
         <div class="navigation">主页 -> </div>
         <h1>欢迎来到北京林业大学研究生招生系统</h1>
         <div class="announcement">
@@ -62,6 +64,8 @@
           <p>第十四条 文件未尽事宜由学院研究生招生工作领导小组和学科负责人联席会议讨论并形成意见，学院党政联席会审议并形成决议。</p>
 
        </div>
+          </template>
+         <router-view v-else /> <!-- 仅在访问子路由时显示嵌套路由页面内容 -->
       </div>
     </div>
   </div>

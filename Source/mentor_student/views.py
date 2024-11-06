@@ -3,6 +3,9 @@ from captcha.image import ImageCaptcha
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+
+from rest_framework.permissions import IsAuthenticated
+
 from mentor_student.models import Applicant
 import random
 import string
@@ -31,7 +34,10 @@ def login(request):
 
             #验证密码是否为身份证号后 8 位
             if applicant.id_card_number[-8:] == password:
-                return JsonResponse({"success": True})  # 验证成功
+                return JsonResponse({
+                    "success": True,
+                    "applicant_id": user_id  # 返回 applicant_id
+                })
             else:
                 return JsonResponse({"success": False, "error": "密码错误"})  # 密码不匹配
 
@@ -63,27 +69,15 @@ def generate_captcha(request):
 class ApplicantViewSet(viewsets.ModelViewSet):
     queryset = Applicant.objects.all()
     serializer_class = ApplicantSerializer
+    #permission_classes = [IsAuthenticated]
 
-    #自定义视图，返回考生的所有基本信息
-    @action(detail=True, methods=['get'])
+    # 自定义操作：获取考生基本信息
+    @action(detail=True, methods=['get'], url_path='basic-info')
     def get_basic_info(self, request, pk=None):
         try:
             applicant = self.get_object()
+            serializer = ApplicantSerializer(applicant)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Applicant.DoesNotExist:
             return Response({'error': 'Applicant not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        data = {
-            'applicant_id': applicant.applicant_id,
-            'name': applicant.name,
-            'birth_date': applicant.birth_date,
-            'id_card_number': applicant.id_card_number,
-            'origin': applicant.origin,
-            'undergraduate_major': applicant.undergraduate_major,
-            'email': applicant.email,
-            'phone': applicant.phone,
-            'undergraduate_school': applicant.undergraduate_school,
-            'school_type': applicant.school_type,
-            'resume': applicant.resume,
-        }
-        return Response(data, status=status.HTTP_200_OK)
 

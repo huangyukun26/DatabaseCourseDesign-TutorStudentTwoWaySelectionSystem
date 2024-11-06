@@ -50,7 +50,6 @@
 </template>
 
 <script>
-
 export default {
   data() {
     return {
@@ -83,20 +82,26 @@ export default {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
+          // 登录成功时，存储 applicant_id 和 isAuthenticated
           localStorage.setItem("isAuthenticated", "true");
+          localStorage.setItem("applicant_id", this.applicantId);  // 存储考生 ID
           this.$router.push({ name: "StudentDashboard" });
         } else {
           alert("登录失败，请检查信息是否正确");
+          this.refreshCaptcha(); // 如果登录失败，刷新验证码
         }
       })
-      .catch(error => console.error("登录请求失败：", error));
+      .catch(error => {
+        console.error("登录请求失败：", error);
+        this.refreshCaptcha(); // 请求失败时也刷新验证码
+      });
     },
+
     refreshCaptcha() {
       // 更新验证码图片 URL，确保生成新验证码
       this.captchaUrl = 'http://localhost:8000/api/generate_captcha?' + new Date().getTime();
     }
   }
-
 };
 </script>
 

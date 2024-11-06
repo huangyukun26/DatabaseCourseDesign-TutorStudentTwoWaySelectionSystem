@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar">
     <div class="menu-item">招生计划</div>
-    <div class="menu-item">基本信息</div>
+    <div class="menu-item" @click="navigateTo('basic-info')">基本信息</div>
     <div class="menu-item">成绩查询</div>
     <div class="menu-item">志愿填报</div>
     <div class="menu-item">录取状态</div>
@@ -9,7 +9,13 @@
 </template>
 
 <script>
-export default {}
+export default {
+  methods: {
+    navigateTo(routeName) {
+      this.$router.push({ name: routeName });
+    }
+  }
+};
 </script>
 
 <style scoped>
