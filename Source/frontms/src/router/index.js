@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import LoginPage from '@/components/LoginPage.vue';  // 登录页面组件
 import StudentDashboard from '@/components/StudentDashboard.vue';  // 学生仪表板页面组件
 import BasicInfo from '@/components/BasicInfo.vue';  // 导入基本信息组件
+import StudentVolunteerSelection from "@/components/StudentVolunteerSelection.vue";
+
 const routes = [
   {
     path: '/',
@@ -19,7 +21,11 @@ const routes = [
       name: 'basic-info',
       component: BasicInfo
     },
-    // 其他子路由
+    {
+    path: '/student-volunteer-selection',
+    name: 'student-volunteer-selection',
+    component: StudentVolunteerSelection
+  }
   ]
   },
   {

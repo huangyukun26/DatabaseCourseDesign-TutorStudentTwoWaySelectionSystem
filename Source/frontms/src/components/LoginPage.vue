@@ -55,8 +55,8 @@ export default {
     return {
       applicantId: '',
       password: '',
-      captchaInput: '', // 用户输入的验证码
-      captchaUrl: 'http://localhost:8000/api/generate_captcha?' + new Date().getTime() // 默认验证码图片 URL
+      captchaInput: '',
+      captchaUrl: 'http://localhost:8000/api/generate_captcha?' + new Date().getTime()
     };
   },
 
@@ -77,28 +77,29 @@ export default {
           password: this.password,
           captcha: this.captchaInput
         }),
-        credentials: 'include' // 启用会话传递
+        credentials: 'include'
       })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // 登录成功时，存储 applicant_id 和 isAuthenticated
-          localStorage.setItem("isAuthenticated", "true");
-          localStorage.setItem("applicant_id", this.applicantId);  // 存储考生 ID
+          // 修改存储方式，使用统一的 user 对象
+          localStorage.setItem("user", JSON.stringify({
+            applicant_id: this.applicantId,
+            isAuthenticated: true
+          }));
           this.$router.push({ name: "StudentDashboard" });
         } else {
           alert("登录失败，请检查信息是否正确");
-          this.refreshCaptcha(); // 如果登录失败，刷新验证码
+          this.refreshCaptcha();
         }
       })
       .catch(error => {
         console.error("登录请求失败：", error);
-        this.refreshCaptcha(); // 请求失败时也刷新验证码
+        this.refreshCaptcha();
       });
     },
 
     refreshCaptcha() {
-      // 更新验证码图片 URL，确保生成新验证码
       this.captchaUrl = 'http://localhost:8000/api/generate_captcha?' + new Date().getTime();
     }
   }

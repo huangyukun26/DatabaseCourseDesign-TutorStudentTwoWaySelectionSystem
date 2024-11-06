@@ -55,48 +55,47 @@ methods: {
 
 <style scoped>
 .basic-info-container {
-  max-width: 800px;
-  margin: 30px auto;
-  padding: 30px;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #444;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
 }
 
 h2 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 25px;
-  font-size: 26px;
+  color: RGB(51, 132, 93);
+  font-size: 22px;
   font-weight: bold;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid RGB(51, 132, 93);
 }
 
 .info-card {
-  display: grid;
-  grid-template-columns: 1fr;
-  row-gap: 15px;
-  padding: 15px;
+  padding: 15px 0;
 }
 
 .info-card p {
-  font-size: 20px;
-  line-height: 1.6;
-  border-bottom: 1px solid #dcdcdc;
-  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  line-height: 2;
+  margin: 8px 0;
+  padding: 8px 15px;
+  background: #f5f7fa;
+  border-radius: 4px;
 }
 
 .info-card p strong {
-  color: #666;
-}
-
-p:last-child {
-  border-bottom: none;
+  color: #606266;
+  width: 120px;
+  text-align: right;
+  margin-right: 15px;
 }
 
 .navigation {
-  font-size: 18px;
+  font-size: 14px;
+  color: #606266;
 }
 </style>
 
