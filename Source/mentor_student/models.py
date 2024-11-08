@@ -22,14 +22,30 @@ class Mentor(models.Model):
     mentor_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, verbose_name="导师姓名")
     title = models.CharField(max_length=100, verbose_name="导师职称")
-    photo = models.ImageField(upload_to='photos/', null=True, blank=True, verbose_name="导师照片")
+    id_card_number = models.CharField(max_length=20, unique=True, verbose_name="导师身份证号",default=0)  #新增字段
     bio = models.TextField(blank=True, verbose_name="导师简介")
     email = models.EmailField(verbose_name="导师邮箱")
     phone = models.CharField(max_length=20, verbose_name="导师电话")
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, verbose_name="学科ID")
+    
 
     def __str__(self):
         return self.name
+    
+class MentorSubjectDirection(models.Model):
+    direction_id = models.AutoField(primary_key=True)
+    mentor = models.ForeignKey(Mentor, on_delete=models.CASCADE, verbose_name="导师ID")
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, verbose_name="学科ID")
+    research_direction = models.CharField(max_length=255, verbose_name="研究方向")
+    year = models.IntegerField(verbose_name="招生年度")
+    is_active = models.BooleanField(default=True, verbose_name="是否有效")
+
+    class Meta:
+        unique_together = ('mentor', 'subject', 'research_direction', 'year')
+        verbose_name = "导师招生方向"
+        verbose_name_plural = "导师招生方向"
+
+    def __str__(self):
+        return f"{self.mentor.name} - {self.subject.name} - {self.research_direction}"
 
 
 #APPLICANT 表
