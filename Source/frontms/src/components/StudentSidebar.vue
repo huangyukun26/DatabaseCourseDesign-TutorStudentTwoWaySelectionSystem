@@ -1,15 +1,30 @@
 <template>
   <div class="sidebar">
-    <div class="menu-item">招生计划</div>
-    <div class="menu-item" @click="navigateTo('basic-info')">基本信息</div>
-    <div class="menu-item" @click="navigateTo('student-scores')">成绩查询</div>
-    <div class="menu-item" @click="navigateTo('student-volunteer-selection')">志愿填报</div>
-    <div class="menu-item">录取状态</div>
+       <!-- 学生侧边栏菜单项 -->
+    <div v-if="userRole === 'student'" class="menu-item">招生计划</div>
+    <div v-if="userRole === 'student'" class="menu-item" @click="navigateTo('basic-info')">基本信息</div>
+    <div v-if="userRole === 'student'" class="menu-item" @click="navigateTo('student-scores')">成绩查询</div>
+    <div v-if="userRole === 'student'" class="menu-item" @click="navigateTo('student-volunteer-selection')">志愿填报</div>
+    <div v-if="userRole === 'student'" class="menu-item">录取状态</div>
+      <!-- 导师侧边栏菜单项 -->
+    <div v-if="userRole === 'teacher'" class="menu-item">招生计划</div>
+    <div v-if="userRole === 'teacher'" class="menu-item" @click="navigateTo('all-student-basic-info')">基本信息</div>
+    <div v-if="userRole === 'teacher'" class="menu-item" @click="navigateTo('student-info')">学生信息</div>
+    <div v-if="userRole === 'teacher'" class="menu-item" @click="navigateTo('student-volunteer-selection')">已录取的学生</div>
   </div>
 </template>
 
 <script>
 export default {
+  data() {
+    return {
+      userRole: ''  // 初始值为空
+    };
+  },
+  mounted() {
+    // 从 localStorage 获取存储的角色信息
+    this.userRole = localStorage.getItem('userRole') || '';  // 如果没有角色信息，默认为空
+  },
   methods: {
     navigateTo(routeName) {
       this.$router.push({ name: routeName });

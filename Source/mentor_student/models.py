@@ -27,6 +27,7 @@ class Mentor(models.Model):
     email = models.EmailField(verbose_name="导师邮箱")
     phone = models.CharField(max_length=20, verbose_name="导师电话")
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, verbose_name="学科ID")
+    Mid_card_number = models.CharField(max_length=20, unique=True, verbose_name="导师身份证号")
 
     def __str__(self):
         return self.name
@@ -37,9 +38,11 @@ class Applicant(models.Model):
     applicant_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, verbose_name="考生姓名")
     birth_date = models.DateField(verbose_name="考生出生日期")
-    id_card_number = models.CharField(max_length=20, unique=True, verbose_name="考生身份证号")
+    Sid_card_number = models.CharField(max_length=20, unique=True, verbose_name="考生身份证号")
     origin = models.CharField(max_length=255, verbose_name="考生生源地")
     undergraduate_major = models.CharField(max_length=100, verbose_name="考生本科专业")
+    first_subject_id = models.IntegerField(null=True, blank=True, verbose_name="一级科目报考志愿ID")
+    second_subject_id = models.IntegerField(null=True, blank=True, verbose_name="二级科目报考志愿ID")
     email = models.EmailField(verbose_name="考生邮箱")
     phone = models.CharField(max_length=20, verbose_name="考生电话")
     undergraduate_school = models.CharField(max_length=255, verbose_name="本科院校")

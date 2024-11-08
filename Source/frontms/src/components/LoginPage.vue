@@ -1,48 +1,38 @@
-
 <template>
   <div class="logo">
       Beijing Forestry University Master’s Admissions System By Four Stopwatch Group
     </div>
   <div class="login-container">
-
     <img src="/images/loginpage.jpg" alt="My Image" class="cover-image" />
-
-
     <div class="welcome">
       欢迎报考北京林业大学！
     </div>
-
     <div class="login-box">
       <div class="logo-area">
         <h1>系统登录</h1>
-
         <form @submit.prevent="login">
           <!-- ID -->
           <div class="form-group">
             <label for="userId">用户 ID:</label>
-            <input type="text" v-model="applicantId" required placeholder="请输入用户 ID" />
+            <input type="text" v-model="applicantId" required placeholder="请输入用户 ID（例如：S123456）" />
           </div>
-
           <!-- 密码 -->
           <div class="form-group">
             <label for="password">密码:</label>
             <input type="password" v-model="password" required placeholder="请输入密码" />
             <div class="link-group">
-            <a href="/forgot-password">忘记密码?</a>
-            <a href="/help">使用帮助</a>
+              <a href="/forgot-password">忘记密码?</a>
+              <a href="/help">使用帮助</a>
             </div>
           </div>
-
           <!-- 验证码 -->
           <div class="form-group">
             <label for="captcha">验证码:</label>
             <input type="text" v-model="captchaInput" required placeholder="请输入验证码" />
             <img :src="captchaUrl" alt="验证码" class="captcha-image" @click="refreshCaptcha" />
           </div>
-
           <!-- 登录按钮 -->
           <button type="submit" class="login-button">登录</button>
-
         </form>
       </div>
     </div>
@@ -69,7 +59,8 @@ export default {
         return;
       }
 
-      console.log('正在尝试登录，applicantId:', this.applicantId);
+      const rolePrefix = this.applicantId.charAt(0); // 获取用户ID的第一个字符作为角色前缀
+      const userId = this.applicantId.substring(1); // 获取除去前缀的用户ID
 
       fetch("http://localhost:8000/api/login/", {
         method: "POST",
@@ -77,9 +68,10 @@ export default {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          userId: this.applicantId,
+          userId: userId,
           password: this.password,
-          captcha: this.captchaInput
+          captcha: this.captchaInput,
+          rolePrefix: rolePrefix // 将角色前缀发送到后端
         }),
         credentials: 'include'
       })
@@ -92,12 +84,13 @@ export default {
           userService.setUser({
             applicant_id: this.applicantId,
             isAuthenticated: true,
-            loginTime: new Date().toISOString()
+            loginTime: new Date().toISOString(),
+            role: rolePrefix,
+            subject: data.subject
           });
-          
-          console.log('存储的用户信息:', userService.getUser());
-          
+
           this.$router.push({ name: "StudentDashboard" });
+
         } else {
           alert("登录失败，请检查信息是否正确");
           this.refreshCaptcha();
@@ -113,8 +106,6 @@ export default {
       this.captchaUrl = 'http://localhost:8000/api/generate_captcha?' + new Date().getTime();
     }
   },
-
-  
 };
 </script>
 

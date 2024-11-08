@@ -28,6 +28,12 @@ export const userService = {
     return user ? user.applicant_id : null;
   },
 
+  //获取导师的学科ID
+  getCurrentUserSubjectId() {
+    const user = this.getUser();
+    return user ? user.subject : null;
+  },
+
   // 检查是否已登录
   isAuthenticated() {
     const user = this.getUser();
