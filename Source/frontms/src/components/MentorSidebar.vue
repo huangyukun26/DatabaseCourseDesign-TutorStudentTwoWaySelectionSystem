@@ -1,10 +1,9 @@
 <template>
   <div class="sidebar">
-    <div class="menu-item" @click="navigateTo('admission-plan')">招生计划</div>
-    <div class="menu-item" @click="navigateTo('basic-info')">基本信息</div>
-    <div class="menu-item" @click="navigateTo('student-scores')">成绩查询</div>
-    <div class="menu-item" @click="navigateTo('student-volunteer-selection')">志愿填报</div>
-    <div class="menu-item" @click="navigateTo('student-admission-status')">录取状态</div>
+    <div class="menu-item" >招生信息</div>
+    <div class="menu-item" >学生申请信息</div>
+    <div class="menu-item" >导师基本信息</div>
+    <div class="menu-item" >已录取学生</div>
   </div>
 </template>
 
@@ -19,6 +18,7 @@ export default {
 </script>
 
 <style scoped>
+/* 使用与 StudentSidebar.vue 相同的样式 */
 .sidebar {
   width: 250px;
   background-color: #F1F1F1;

@@ -1,13 +1,12 @@
 <template>
   <div class="dashboard">
-    <StudentNavbar /> <!-- 导航栏组件 -->
+    <StudentNavbar /> <!-- 复用学生导航栏组件 -->
     <div class="main-content">
-      <StudentSidebar /> <!-- 左侧功能栏组件 -->
+      <MentorSidebar />
       <div class="content">
-
-        <template v-if="$route.path === '/dashboard'">
-        <h1>欢迎来到北京林业大学研究生招生系统--学生端</h1>
-        <div class="announcement">
+        <template v-if="$route.path === '/mentor/dashboard'">
+          <h1>欢迎来到北京林业大学研究生招生系统-导师端</h1>
+          <div class="announcement">
           <h1>公告</h1>
           <h2>关于信息学院（人工智能学院）硕士研究生招生指标分配指导意见（试行）的通知</h2>
           <h3>第一章 总则</h3>
@@ -62,9 +61,9 @@
           <p>第十三条 该文件由学院研究生教学管理办公室负责解释。经学院党委会会议、学院党政联席会按程序审议后，自公布之日起开始实施本文件试行一年，可根据实际情况做必要修订。</p>
           <p>第十四条 文件未尽事宜由学院研究生招生工作领导小组和学科负责人联席会议讨论并形成意见，学院党政联席会审议并形成决议。</p>
 
-       </div>
-          </template>
-         <router-view v-else /> <!-- 仅在访问子路由时显示嵌套路由页面内容 -->
+              </div>
+        </template>
+        <router-view v-else />
       </div>
     </div>
   </div>
@@ -72,12 +71,12 @@
 
 <script>
 import StudentNavbar from "@/components/StudentNavbar.vue";
-import StudentSidebar from "@/components/StudentSidebar.vue";
+import MentorSidebar from "@/components/MentorSidebar.vue";
 
 export default {
   components: {
-    StudentSidebar,
     StudentNavbar,
+    MentorSidebar,
   }
 }
 </script>
@@ -101,7 +100,6 @@ export default {
 }
 
 
-
 .announcement {
   margin-top: 20px;
   padding: 10px;
@@ -110,7 +108,7 @@ export default {
   border: 1px solid #ccc;
   border-radius: 5px;
   max-height: 800px;
-  overflow-y: auto; 
+  overflow-y: auto;
 }
 
 .announcement h1 {

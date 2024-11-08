@@ -31,6 +31,25 @@
           </div>
         </div>
 
+        <!-- 报考信息 -->
+        <div class="info-section">
+          <h3>报考信息</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">报考学科：</span>
+              <span class="value">{{ scoreData.subject_info.name }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">学科代码：</span>
+              <span class="value">{{ scoreData.subject_info.subject_id }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">学科类型：</span>
+              <span class="value">{{ scoreData.subject_info.type }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- 成绩信息 -->
         <div class="score-section">
           <h3>成绩详情</h3>
@@ -45,7 +64,7 @@
             </div>
             <div class="score-item total">
               <div class="score-label">总分</div>
-              <div class="score-value">{{ scoreData.total_score }}</div>
+              <div class="score-value">{{ calculateTotalScore }}</div>
             </div>
           </div>
         </div>
@@ -60,7 +79,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 
 export default {
@@ -70,6 +89,13 @@ export default {
     const loading = ref(false)
     const error = ref(null)
     const applicantId = ref(null)
+
+    // 计算总分
+    const calculateTotalScore = computed(() => {
+      if (!scoreData.value) return 0
+      const total = scoreData.value.preliminary_score + scoreData.value.final_score
+      return total.toFixed(1)
+    })
 
     // 获取考生ID
     const fetchApplicantId = () => {
@@ -125,7 +151,8 @@ export default {
     return {
       scoreData,
       loading,
-      error
+      error,
+      calculateTotalScore
     }
   }
 }
@@ -142,67 +169,90 @@ export default {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-h2{
+h2 {
   text-align: center;
+  color: RGB(51, 132, 93);
+  margin-bottom: 30px;
 }
 
-h2, h3 {
+h3 {
   color: RGB(51, 132, 93);
   margin-bottom: 20px;
+  font-size: 18px;
 }
 
 .score-card {
   display: grid;
-  gap: 20px;
+  gap: 25px;
 }
 
 .info-section, .score-section {
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 6px;
 }
 
 .info-item {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 15px;
 }
 
 .label {
   color: RGB(51, 132, 93);
   font-weight: bold;
+  min-width: 100px;
+}
+
+.value {
+  color: #333;
+  flex: 1;
 }
 
 .score-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
 .score-item {
   background-color: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 8px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.score-item:hover {
+  transform: translateY(-2px);
 }
 
 .score-label {
   color: RGB(51, 132, 93);
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  font-size: 16px;
 }
 
 .score-value {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: bold;
+  color: #333;
 }
 
 .total {
@@ -216,29 +266,51 @@ h2, h3 {
 
 .loading {
   text-align: center;
-  padding: 20px;
+  padding: 40px;
   color: RGB(51, 132, 93);
+  font-size: 16px;
 }
 
 .error-message {
   background-color: #ff4444;
   color: white;
-  padding: 10px 20px;
-  border-radius: 4px;
+  padding: 12px 20px;
+  border-radius: 6px;
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .close-button {
   background: none;
   border: none;
   color: white;
-  float: right;
+  font-size: 20px;
   cursor: pointer;
+  padding: 0 5px;
+}
+
+.close-button:hover {
+  opacity: 0.8;
 }
 
 .no-data {
   text-align: center;
-  padding: 40px;
+  padding: 60px;
   color: #666;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .score-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

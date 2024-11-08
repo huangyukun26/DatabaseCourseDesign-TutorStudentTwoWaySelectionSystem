@@ -9,7 +9,7 @@ class Subject(models.Model):
     subject_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, verbose_name="学科名称")
     level = models.CharField(max_length=50, verbose_name="学科等级")
-    parent_subject = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, verbose_name="上级学科ID")
+    parent_subject = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='sub_subjects')
     description = models.TextField(blank=True, verbose_name="学科描述")
     type = models.CharField(max_length=50, verbose_name="学科类型")
 
@@ -22,7 +22,7 @@ class Mentor(models.Model):
     mentor_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, verbose_name="导师姓名")
     title = models.CharField(max_length=100, verbose_name="导师职称")
-    id_card_number = models.CharField(max_length=20, unique=True, verbose_name="导师身份证号",default=0)  #新增字段
+    id_card_number = models.CharField(max_length=20, unique=True, verbose_name="导师身份证号", null=True, blank=True)  #新增字段
     bio = models.TextField(blank=True, verbose_name="导师简介")
     email = models.EmailField(verbose_name="导师邮箱")
     phone = models.CharField(max_length=20, verbose_name="导师电话")
@@ -69,14 +69,19 @@ class Applicant(models.Model):
 #ADMISSION_CATALOG 表
 class AdmissionCatalog(models.Model):
     catalog_id = models.AutoField(primary_key=True)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, verbose_name="学科ID")
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, verbose_name="学科")
     direction_id = models.IntegerField(verbose_name="研究方向编号")
     total_quota = models.IntegerField(verbose_name="年度招生指标")
-    additional_quota = models.IntegerField(verbose_name="补充招生指标")
-    year = models.IntegerField(verbose_name="招生年度")
+    additional_quota = models.IntegerField(verbose_name="补充招生指标", default=0)
+    year = models.IntegerField(verbose_name="年度")
+
+    class Meta:
+        verbose_name = "招生计划"
+        verbose_name_plural = "招生计划"
+        unique_together = ('subject', 'direction_id', 'year')  #添加联合唯一约束
 
     def __str__(self):
-        return f"{self.subject.name} - {self.year}"
+        return f"{self.subject.name} - 方向{self.direction_id} - {self.year}年"
 
 
 #MENTOR_CATALOG_ASSIGNMENT 表
@@ -113,11 +118,22 @@ class MentorApplicantPreference(models.Model):
 class ApplicantScore(models.Model):
     score_id = models.AutoField(primary_key=True)
     applicant = models.ForeignKey(Applicant, on_delete=models.CASCADE, verbose_name="考生ID")
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        verbose_name="报考学科",
+        null=True,  #允许数据库中的值为空
+        blank=True  #允许表单中不填写该字段
+    )
     preliminary_score = models.FloatField(verbose_name="初试成绩")
     final_score = models.FloatField(verbose_name="复试成绩")
 
     def __str__(self):
-        return f"{self.applicant.name} - Scores"
+        return f"{self.applicant.name} - {self.subject.name if self.subject else ''} - Scores"
+
+    class Meta:
+        verbose_name = "考生成绩"
+        verbose_name_plural = "考生成绩"
 
 
 
@@ -138,8 +154,8 @@ class SystemRole(models.Model):
 #USER_ROLE 表
 class UserRole(models.Model):
     user_role_id = models.AutoField(primary_key=True)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,default=0)
-    object_id = models.PositiveIntegerField(default=0)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
     user = GenericForeignKey('content_type', 'object_id')
     role = models.ForeignKey('SystemRole', on_delete=models.CASCADE)
 

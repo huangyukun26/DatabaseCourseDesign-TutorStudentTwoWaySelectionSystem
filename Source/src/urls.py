@@ -1,39 +1,23 @@
-"""
-URL configuration for src project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
-# urls.py
-
-from mentor_student import views
 from django.contrib import admin
 from django.urls import path, include
+from mentor_student import views
 
-
+# 主 URL 配置
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('mentor_student.urls')),
-    path("api/login/", views.login, name="login"),
-    path('', include('mentor_student.urls')), 
+    
+    # REST framework API 路由
+    path('api/', include('mentor_student.urls')),  # 包含所有 API 路由
+    
+    # 独立的 API 端点
+    path('api/login/', views.login, name='login'),
     path('api/generate_captcha/', views.generate_captcha, name='generate_captcha'),
-    path('api/volunteer/submit', views.submit_volunteer, name='submit_volunteer'),
-    path('api/volunteer/status/<str:student_id>', views.get_volunteer_status, name='get_volunteer_status'),
-    path('api/applicant/volunteers/<str:applicant_id>', views.get_applicant_volunteers, name='get_applicant_volunteers'),
+    path('api/volunteer/submit/', views.submit_volunteer, name='submit_volunteer'),
+    path('api/volunteer/status/<str:student_id>/', views.get_volunteer_status, name='get_volunteer_status'),
+    path('api/applicant/volunteers/<str:applicant_id>/', views.get_applicant_volunteers, name='get_applicant_volunteers'),
     path('api/mentors/', views.get_mentors, name='get_mentors'),
-    path('api/applicant/scores/<str:applicant_id>', views.get_applicant_scores, name='get_applicant_scores'),
-    path('api/admission/status/<str:applicant_id>', views.get_admission_status, name='get_admission_status'),
+    path('api/applicant/scores/<str:applicant_id>/', views.get_applicant_scores, name='get_applicant_scores'),
+    path('api/admission/status/<str:applicant_id>/', views.get_admission_status, name='get_admission_status'),
 ]
 
 

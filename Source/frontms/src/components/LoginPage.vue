@@ -1,4 +1,3 @@
-
 <template>
   <div class="logo">
       Beijing Forestry University Master’s Admissions System By Four Stopwatch Group
@@ -50,72 +49,114 @@
 </template>
 
 <script>
-import { userService } from '@/services/userService';
+import { useStore } from 'vuex'
+import { userService } from '@/services/userService'
+import { ElMessage } from 'element-plus'
 
 export default {
+  setup() {
+    const store = useStore()
+    return { store }
+  },
+
   data() {
     return {
       applicantId: '',
       password: '',
       captchaInput: '',
       captchaUrl: 'http://localhost:8000/api/generate_captcha?' + new Date().getTime()
-    };
-  },
-
-  methods: {
-    login() {
-      if (!this.applicantId || !this.password || !this.captchaInput) {
-        alert("请填写所有信息！");
-        return;
-      }
-
-      console.log('正在尝试登录，applicantId:', this.applicantId);
-
-      fetch("http://localhost:8000/api/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          userId: this.applicantId,
-          password: this.password,
-          captcha: this.captchaInput
-        }),
-        credentials: 'include'
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('登录响应:', data);
-
-        if (data.success) {
-          // 使用 userService 存储用户信息
-          userService.setUser({
-            applicant_id: this.applicantId,
-            isAuthenticated: true,
-            loginTime: new Date().toISOString()
-          });
-          
-          console.log('存储的用户信息:', userService.getUser());
-          
-          this.$router.push({ name: "StudentDashboard" });
-        } else {
-          alert("登录失败，请检查信息是否正确");
-          this.refreshCaptcha();
-        }
-      })
-      .catch(error => {
-        console.error("登录请求失败：", error);
-        this.refreshCaptcha();
-      });
-    },
-
-    refreshCaptcha() {
-      this.captchaUrl = 'http://localhost:8000/api/generate_captcha?' + new Date().getTime();
     }
   },
 
-  
-};
+  methods: {
+    async login() {
+      try {
+        if (!this.applicantId || !this.password || !this.captchaInput) {
+          ElMessage.warning("请填写所有信息！")
+          return
+        }
+
+        console.log('正在尝试登录，applicantId:', this.applicantId)
+
+        const response = await fetch("http://localhost:8000/api/login/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            userId: this.applicantId,
+            password: this.password,
+            captcha: this.captchaInput
+          }),
+          credentials: 'include'
+        })
+
+        const data = await response.json()
+        console.log('登录响应:', data)
+
+        if (data.success) {
+          const userInfo = {
+            applicant_id: this.applicantId,
+            isAuthenticated: true,
+            userType: data.user_type,
+            loginTime: new Date().toISOString(),
+            ...data.user
+          }
+          
+          this.store.dispatch('loginUser', {
+            applicantId: this.applicantId,
+            userInfo: userInfo
+          })
+          
+          localStorage.setItem('vuex-state', JSON.stringify({
+            user: userInfo,
+            applicantId: this.applicantId,
+            userType: data.user_type
+          }))
+          
+          userService.setUser(userInfo)
+          
+          ElMessage.success('登录成功')
+          
+          if (data.user_type === 'mentor') {
+            this.$router.push('/mentor/dashboard')
+          } else {
+            this.$router.push({ name: "StudentDashboard" })
+          }
+        } else {
+          ElMessage.error(data.error || "登录失败，请检查信息是否正确")
+          this.refreshCaptcha()
+        }
+      } catch (error) {
+        console.error("登录请求失败：", error)
+        ElMessage.error("登录失败：" + error.message)
+        this.refreshCaptcha()
+      }
+    },
+
+    refreshCaptcha() {
+      this.captchaUrl = 'http://localhost:8000/api/generate_captcha?' + new Date().getTime()
+    },
+
+    clearLoginState() {
+      this.store.dispatch('logoutUser')
+      
+      localStorage.removeItem('vuex-state')
+      
+      userService.clearUser()
+    }
+  },
+
+  mounted() {
+    this.clearLoginState()
+    
+    this.refreshCaptcha()
+  },
+
+  beforeMount() {
+    this.clearLoginState()
+  }
+}
 </script>
 
 <style scoped>
