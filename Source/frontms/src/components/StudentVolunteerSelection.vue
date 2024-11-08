@@ -122,59 +122,47 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { userService } from '@/services/userService'
 
-const store = useStore()
 const router = useRouter()
+
+// 状态变量
+const loading = ref(false)
+const error = ref('')
+const hasSubmitted = ref(false)
+const submitting = ref(false)
+const subjectData = ref(null)
+const selectedSubSubject = ref(null)
+const submittedVolunteers = ref([])
+const mentorRanks = ref({})
 
 // 获取当前登录的考生ID
 const currentApplicantId = computed(() => {
-  // 先从 Vuex 获取
-  const storeId = store.state.applicantId
-  if (storeId) return storeId
-  
-  // 如果 Vuex 没有，从 localStorage 获取
-  try {
-    const savedState = localStorage.getItem('vuex-state')
-    if (savedState) {
-      const state = JSON.parse(savedState)
-      if (state.applicantId) {
-        // 恢复 Vuex 状态
-        store.dispatch('loginUser', {
-          applicantId: state.applicantId,
-          userInfo: state.user
-        })
-        return state.applicantId
-      }
-    }
-  } catch (e) {
-    console.error('Error reading from localStorage:', e)
-  }
-  
-  return null
+  const studentUser = userService.getUserByType('student')
+  return studentUser?.applicant_id || null
+})
+
+// 检查是否有选择导师
+const hasSelectedMentors = computed(() => {
+  return Object.keys(mentorRanks.value).length > 0
+})
+
+// 显示的导师列表
+const displayedMentors = computed(() => {
+  if (!selectedSubSubject.value) return []
+  return selectedSubSubject.value.mentors || []
 })
 
 // 检查登录状态
 const checkAuth = () => {
-  if (!currentApplicantId.value) {
-    ElMessage.error('请先登录')
+  if (!userService.isAuthenticatedByType('student')) {
+    ElMessage.error('请先登录学生账号')
     router.push('/login')
     return false
   }
   return true
 }
-
-const loading = ref(false)
-const error = ref('')
-const subjectData = ref(null)
-const selectedSubSubject = ref(null)
-const mentorRanks = ref({})
-const submitting = ref(false)
-
-// 添加新的状态
-const hasSubmitted = ref(false)
-const submittedVolunteers = ref([])
 
 // 设置 axios 默认配置
 axios.defaults.baseURL = 'http://localhost:8000'  // 确保这是你的后端地址
@@ -211,17 +199,6 @@ const fetchSubjectMentors = async () => {
   }
 }
 
-// 计算属性：显示的导师列表
-const displayedMentors = computed(() => {
-  if (!subjectData.value) return []
-  
-  if (subjectData.value.has_sub_subjects) {
-    return selectedSubSubject.value?.mentors || []
-  }
-  
-  return subjectData.value.mentors || []
-})
-
 // 选择研究方向
 const selectSubSubject = (sub) => {
   console.log('Selecting sub subject:', sub)
@@ -249,11 +226,6 @@ const handleRankChange = (mentorId) => {
     delete mentorRanks.value[mentorId]
   }
 }
-
-// 计算是否有选择的导师
-const hasSelectedMentors = computed(() => {
-  return Object.values(mentorRanks.value).some(rank => rank !== '')
-})
 
 // 获取已提交的志愿信息
 const fetchSubmittedVolunteers = async () => {
@@ -303,8 +275,9 @@ const fetchSubmittedVolunteers = async () => {
 
 // 修改提交志愿的函数
 const submitVolunteers = async () => {
-  if (!currentApplicantId.value) {
+  if (!userService.isAuthenticatedByType('student')) {
     ElMessage.error('请先登录')
+    router.push('/login')
     return
   }
 
@@ -372,8 +345,9 @@ const initialize = async () => {
 }
 
 // 使用 onMounted 钩子进行初始化
-onMounted(() => {
-  initialize()
+onMounted(async () => {
+  if (!checkAuth()) return
+  await initialize()
 })
 </script>
 

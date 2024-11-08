@@ -11,44 +11,44 @@
       </div>
 
       <!-- 信息展示 -->
-      <div v-if="!loading && !error && applicant" class="info-card">
+      <div v-if="!loading && !error && basicInfo" class="info-card">
         <div class="info-section">
           <div class="info-grid">
             <div class="info-item">
               <span class="label">姓名：</span>
-              <span class="value">{{ applicant.name }}</span>
+              <span class="value">{{ basicInfo.name }}</span>
             </div>
             <div class="info-item">
               <span class="label">出生日期：</span>
-              <span class="value">{{ applicant.birth_date }}</span>
+              <span class="value">{{ basicInfo.birth_date }}</span>
             </div>
             <div class="info-item">
               <span class="label">身份证号：</span>
-              <span class="value">{{ applicant.id_card_number }}</span>
+              <span class="value">{{ basicInfo.id_card_number }}</span>
             </div>
             <div class="info-item">
               <span class="label">生源地：</span>
-              <span class="value">{{ applicant.origin }}</span>
+              <span class="value">{{ basicInfo.origin }}</span>
             </div>
             <div class="info-item">
               <span class="label">本科院校：</span>
-              <span class="value">{{ applicant.undergraduate_school }}</span>
+              <span class="value">{{ basicInfo.undergraduate_school }}</span>
             </div>
             <div class="info-item">
               <span class="label">本科专业：</span>
-              <span class="value">{{ applicant.undergraduate_major }}</span>
+              <span class="value">{{ basicInfo.undergraduate_major }}</span>
             </div>
             <div class="info-item">
               <span class="label">学校类型：</span>
-              <span class="value">{{ applicant.school_type }}</span>
+              <span class="value">{{ basicInfo.school_type }}</span>
             </div>
             <div class="info-item">
               <span class="label">邮箱：</span>
-              <span class="value">{{ applicant.email }}</span>
+              <span class="value">{{ basicInfo.email }}</span>
             </div>
             <div class="info-item">
               <span class="label">电话：</span>
-              <span class="value">{{ applicant.phone }}</span>
+              <span class="value">{{ basicInfo.phone }}</span>
             </div>
           </div>
         </div>
@@ -57,7 +57,7 @@
         <div class="info-section">
           <h3>简历信息</h3>
           <div class="resume-content">
-            {{ applicant.resume }}
+            {{ basicInfo.resume }}
           </div>
         </div>
       </div>
@@ -71,47 +71,69 @@
 </template>
 
 <script>
-import { userService } from '@/services/userService';
-import axios from 'axios';
+import { userService } from '@/services/userService'
+import { ElMessage } from 'element-plus'
 
 export default {
   data() {
     return {
-      applicant: null,
+      basicInfo: null,
       loading: false,
       error: null
-    };
-  },
-  
-  created() {
-    if (!userService.isAuthenticated()) {
-      this.$router.push({ name: 'Login' });
-      return;
     }
-    this.getApplicantInfo();
+  },
+
+  created() {
+    // 使用新的 isAuthenticatedByType 方法检查学生登录状态
+    if (!userService.isAuthenticatedByType('student')) {
+      ElMessage.error('请先登录')
+      this.$router.push('/login')
+      return
+    }
+    this.fetchBasicInfo()
   },
 
   methods: {
-    async getApplicantInfo() {
-      const applicantId = userService.getUserId();
-      if (!applicantId) {
-        this.error = '未找到考生ID，请重新登录';
-        return;
-      }
-
+    async fetchBasicInfo() {
       try {
-        this.loading = true;
-        const response = await axios.get(`http://localhost:8000/api/applicants/${applicantId}/basic-info/`);
-        this.applicant = response.data;
+        this.loading = true
+        this.error = null
+        
+        const studentUser = userService.getUserByType('student')
+        if (!studentUser || !studentUser.applicant_id) {
+          throw new Error('无法获取用户信息')
+        }
+
+        const response = await fetch(`http://localhost:8000/api/applicant/basic-info/${studentUser.applicant_id}/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        console.log('Received data:', data)
+
+        if (data.status === 'success') {
+          this.basicInfo = data.data
+        } else {
+          throw new Error(data.message || '获取基本信息失败')
+        }
       } catch (error) {
-        this.error = '获取考生信息失败';
-        console.error(error);
+        console.error('Error fetching basic info:', error)
+        this.error = error.message || '获取信息失败，请稍后重试'
+        ElMessage.error(this.error)
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     }
   }
-};
+}
 </script>
 
 <style scoped>

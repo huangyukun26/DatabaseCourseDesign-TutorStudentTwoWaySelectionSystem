@@ -76,8 +76,6 @@ export default {
           return
         }
 
-        console.log('正在尝试登录，applicantId:', this.applicantId)
-
         const response = await fetch("http://localhost:8000/api/login/", {
           method: "POST",
           headers: {
@@ -95,30 +93,25 @@ export default {
         console.log('登录响应:', data)
 
         if (data.success) {
+          const currentUserType = this.applicantId.startsWith('6883') ? 'mentor' : 'student'
+          
           const userInfo = {
-            applicant_id: this.applicantId,
             isAuthenticated: true,
-            userType: data.user_type,
+            userType: currentUserType,
             loginTime: new Date().toISOString(),
+            ...(currentUserType === 'student' 
+              ? { applicant_id: this.applicantId }
+              : { mentor_id: this.applicantId }
+            ),
             ...data.user
           }
           
-          this.store.dispatch('loginUser', {
-            applicantId: this.applicantId,
-            userInfo: userInfo
-          })
-          
-          localStorage.setItem('vuex-state', JSON.stringify({
-            user: userInfo,
-            applicantId: this.applicantId,
-            userType: data.user_type
-          }))
-          
+          userService.clearUserByType(currentUserType)
           userService.setUser(userInfo)
           
           ElMessage.success('登录成功')
           
-          if (data.user_type === 'mentor') {
+          if (currentUserType === 'mentor') {
             this.$router.push('/mentor/dashboard')
           } else {
             this.$router.push({ name: "StudentDashboard" })
@@ -136,25 +129,11 @@ export default {
 
     refreshCaptcha() {
       this.captchaUrl = 'http://localhost:8000/api/generate_captcha?' + new Date().getTime()
-    },
-
-    clearLoginState() {
-      this.store.dispatch('logoutUser')
-      
-      localStorage.removeItem('vuex-state')
-      
-      userService.clearUser()
     }
   },
 
   mounted() {
-    this.clearLoginState()
-    
     this.refreshCaptcha()
-  },
-
-  beforeMount() {
-    this.clearLoginState()
   }
 }
 </script>

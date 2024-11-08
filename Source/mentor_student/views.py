@@ -649,3 +649,41 @@ class AdmissionCatalogViewSet(viewsets.ReadOnlyModelViewSet):
                 'status': 'error',
                 'message': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_applicant_basic_info(request, applicant_id):
+    try:
+        applicant = Applicant.objects.get(applicant_id=applicant_id)
+
+        #构建基本信息响应
+        basic_info = {
+            'name': applicant.name,
+            'birth_date': applicant.birth_date,
+            'id_card_number': applicant.id_card_number,
+            'origin': applicant.origin,
+            'undergraduate_school': applicant.undergraduate_school,
+            'undergraduate_major': applicant.undergraduate_major,
+            'school_type': applicant.school_type,
+            'email': applicant.email,
+            'phone': applicant.phone,
+            'resume': applicant.resume if hasattr(applicant, 'resume') else ''
+        }
+
+        return JsonResponse({
+            'status': 'success',
+            'data': basic_info
+        })
+
+    except Applicant.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': '考生不存在'
+        }, status=404)
+
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)

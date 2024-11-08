@@ -15,4 +15,7 @@ urlpatterns = [
     
     # 添加导师查询路由
     path('subject/mentors/<str:applicant_id>/', views.get_subject_mentors, name='get_subject_mentors'),
+    
+    # 添加获取考生基本信息的路由
+    path('applicant/basic-info/<str:applicant_id>/', views.get_applicant_basic_info, name='get_applicant_basic_info'),
 ]
