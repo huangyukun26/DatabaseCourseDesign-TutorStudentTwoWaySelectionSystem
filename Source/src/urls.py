@@ -17,7 +17,6 @@ urlpatterns = [
     path('api/applicant/volunteers/<str:applicant_id>/', views.get_applicant_volunteers, name='get_applicant_volunteers'),
     path('api/mentors/', views.get_mentors, name='get_mentors'),
     path('api/applicant/scores/<str:applicant_id>/', views.get_applicant_scores, name='get_applicant_scores'),
-    path('api/admission/status/<str:applicant_id>/', views.get_admission_status, name='get_admission_status'),
 ]
 
 

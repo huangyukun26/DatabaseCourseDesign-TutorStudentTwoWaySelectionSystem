@@ -1,7 +1,6 @@
 from django.db import models
 from django.http import HttpResponse
 from captcha.image import ImageCaptcha
-from django.views.decorators.csrf import csrf_exempt
 from mentor_student.models import Applicant, Mentor, MentorApplicantPreference, ApplicantScore, MentorSubjectDirection, \
     Subject
 import random
@@ -9,10 +8,7 @@ import string
 from .models import Applicant
 from .serializers import ApplicantSerializer, SubjectSerializer
 from rest_framework.decorators import action
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ObjectDoesNotExist
-import json
 from rest_framework.decorators import api_view
 from .models import MentorApplicantPreference, ApplicantScore
 from rest_framework import viewsets, status
@@ -20,49 +16,57 @@ from rest_framework.response import Response
 from .models import AdmissionCatalog
 from .serializers import AdmissionCatalogSerializer
 from django_filters import rest_framework as filters
-from .dao.applicant_dao import ApplicantDAO
-from .dao.mentor_dao import MentorDAO
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+from .service.applicant_service import ApplicantService
+from .service.mentor_service import MentorService
+from .service.subject_service import SubjectService
+from .service.score_service import ScoreService
+from .service.mentor_subject_service import MentorSubjectService
+from .service.volunteer_service import VolunteerService
 
 
 @csrf_exempt
 def login(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            user_id = data.get("userId")
-            password = data.get("password")
-            captcha_input = data.get("captcha")
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "无效的请求方法"})
+        
+    try:
+        data = json.loads(request.body)
+        user_id = data.get("userId")
+        password = data.get("password")
+        captcha_input = data.get("captcha")
 
-            if captcha_input != request.session.get('captcha', ''):
-                return JsonResponse({"success": False, "error": "验证码错误"})
+        # 验证验证码
+        if captcha_input != request.session.get('captcha', ''):
+            return JsonResponse({"success": False, "error": "验证码错误"})
 
-            is_mentor = str(user_id).startswith('6883')
-            
-            if is_mentor:
-                mentor_dao = MentorDAO()
-                mentor = mentor_dao.find_by_mentor_id(user_id)
-                if mentor and mentor.id_card_number[-8:] == password:
-                    return JsonResponse({
-                        "success": True,
-                        "user_type": "mentor",
-                        "user_id": user_id
-                    })
-                return JsonResponse({"success": False, "error": "导师不存在或密码错误"})
-            else:
-                applicant_dao = ApplicantDAO()
-                applicant = applicant_dao.find_by_applicant_id(user_id)
-                if applicant and applicant.id_card_number[-8:] == password:
-                    return JsonResponse({
-                        "success": True,
-                        "user_type": "student",
-                        "user_id": user_id
-                    })
-                return JsonResponse({"success": False, "error": "考生不存在或密码错误"})
+        # 判断是否为导师登录
+        is_mentor = str(user_id).startswith('6883')
+        
+        if is_mentor:
+            mentor_service = MentorService()
+            if mentor_service.verify_mentor_login(user_id, password):
+                return JsonResponse({
+                    "success": True,
+                    "user_type": "mentor",
+                    "user_id": user_id
+                })
+            return JsonResponse({"success": False, "error": "导师不存在或密码错误"})
+        else:
+            applicant_service = ApplicantService()
+            if applicant_service.verify_login(user_id, password):
+                return JsonResponse({
+                    "success": True,
+                    "user_type": "student",
+                    "user_id": user_id
+                })
+            return JsonResponse({"success": False, "error": "考生不存在或密码错误"})
 
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-
-    return JsonResponse({"success": False, "error": "无效的请求方法"})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
 
 
 
@@ -162,50 +166,90 @@ def submit_volunteer(request):
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_volunteer_status(request, applicant_id):
-    """
-    获取考生的志愿选择状态
-    URL: /api/volunteer/status/<applicant_id>
-    Method: GET
-    """
+    """获取考生的志愿选择状态"""
     try:
-        #验证考生是否存在
-        try:
-            applicant = Applicant.objects.get(applicant_id=applicant_id)
-        except Applicant.DoesNotExist:
-            return JsonResponse({
-                'status': 'error',
-                'message': f'考生ID {applicant_id} 不存在'
-            }, status=404)
-
-        #获取该考生的所有志愿选择
-        preferences = MentorApplicantPreference.objects.filter(
-            applicant=applicant
-        ).select_related('mentor').order_by('preference_rank')
-
-        #构建返回数据
-        choices = []
-        for pref in preferences:
-            choices.append({
-                'mentor_id': pref.mentor.mentor_id,
-                'mentor_name': pref.mentor.name,
-                'rank': pref.preference_rank,
-                'status': pref.status
-            })
-
+        volunteer_service = VolunteerService()
+        result = volunteer_service.get_volunteer_status(applicant_id)
+        
         return JsonResponse({
             'status': 'success',
-            'data': {
-                'applicant_id': applicant_id,
-                'applicant_name': applicant.name,
-                'choices': choices
-            }
+            'data': result
         })
-
-    except Exception as e:
-        print(f"获取志愿状态错误: {str(e)}")  #添加服务器端日志
+        
+    except ValueError as e:
         return JsonResponse({
             'status': 'error',
-            'message': f'获取志愿状态失败: {str(e)}'
+            'message': str(e)
+        }, status=404)
+        
+    except Exception as e:
+        logger.error(f"获取志愿状态时发生错误: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_volunteer_status(request, applicant_id):
+    """获取考生的志愿选择状态"""
+    try:
+        volunteer_service = VolunteerService()
+        result = volunteer_service.get_volunteer_status(applicant_id)
+        
+        return JsonResponse({
+            'status': 'success',
+            'data': result
+        })
+        
+    except ValueError as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=404)
+        
+    except Exception as e:
+        logger.error(f"获取志愿状态时发生错误: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def submit_volunteer(request):
+    """提交志愿选择"""
+    try:
+        data = json.loads(request.body)
+        applicant_id = data.get('applicant_id')
+        volunteers = data.get('volunteers', [])
+        
+        volunteer_service = VolunteerService()
+        result = volunteer_service.submit_volunteers(applicant_id, volunteers)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': '志愿提交成功',
+            'data': result
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': '无效的请求数据'
+        }, status=400)
+        
+    except ValueError as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+        
+    except Exception as e:
+        logger.error(f"提交志愿时发生错误: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
         }, status=500)
     
 
@@ -217,89 +261,28 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_subject_mentors(request, applicant_id):
+    """获取考生报考学科的导师信息"""
     try:
-        logger.info(f"开始获取考生 {applicant_id} 的导师信息")
+        mentor_subject_service = MentorSubjectService()
+        result = mentor_subject_service.get_subject_mentors(applicant_id)
         
-        #获取考生报考的学科信息
-        try:
-            applicant = Applicant.objects.get(applicant_id=applicant_id)
-            logger.info(f"找到考生: {applicant.name}")
-            
-            applicant_score = ApplicantScore.objects.select_related('subject').get(
-                applicant=applicant
-            )
-            
-            if not applicant_score.subject:
-                raise ValueError("考生没有关联的学科信息")
-
-            main_subject = applicant_score.subject
-            logger.info(f"考生报考学科: {main_subject.name} (ID: {main_subject.subject_id})")
-
-            #获取学科信息
-            subject_data = {
-                'id': main_subject.subject_id,
-                'name': main_subject.name,
-                'level': main_subject.level,
-                'type': main_subject.type
-            }
-
-            response_data = {
-                'main_subject': subject_data,
-                'has_sub_subjects': False,
-                'sub_subjects': [],
-                'mentors': []
-            }
-
-            current_year = datetime.now().year
-
-            #获取所有导师方向数据
-            mentor_directions = MentorSubjectDirection.objects.filter(
-                subject_id=main_subject.subject_id,  # 使用一级学科ID
-                is_active=True,
-                year=current_year
-            ).select_related('mentor')
-
-            #按研究方向分组
-            direction_groups = {}
-            for md in mentor_directions:
-                if md.research_direction not in direction_groups:
-                    direction_groups[md.research_direction] = {
-                        'id': len(direction_groups) + 1,  #生成唯一ID
-                        'name': md.research_direction,
-                        'mentors': []
-                    }
-                
-                direction_groups[md.research_direction]['mentors'].append({
-                    'mentor_id': md.mentor.mentor_id,
-                    'name': md.mentor.name,
-                    'title': md.mentor.title,
-                    'research_direction': md.research_direction
-                })
-
-            #如果有研究方向，将其视为二级学科
-            if direction_groups:
-                response_data['has_sub_subjects'] = True
-                response_data['sub_subjects'] = list(direction_groups.values())
-                logger.info(f"找到 {len(direction_groups)} 个研究方向")
-            else:
-                logger.warning("未找到任何研究方向")
-
-            return JsonResponse({
-                'status': 'success',
-                'data': response_data
-            })
-
-        except Applicant.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': '考生不存在'}, status=404)
-        except ApplicantScore.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': '未找到考生成绩信息'}, status=404)
-        except Exception as e:
-            logger.error(f"处理过程中出错: {str(e)}")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
+        return JsonResponse({
+            'status': 'success',
+            'data': result
+        })
+        
+    except ValueError as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=404)
+        
     except Exception as e:
         logger.error(f"获取导师信息时发生错误: {str(e)}", exc_info=True)
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 @csrf_exempt
 @require_http_methods(["GET"])
@@ -390,55 +373,21 @@ def get_applicant_volunteers(request, applicant_id):
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_applicant_scores(request, applicant_id):
-    """
-    获取考生成绩信息
-    """
     try:
-        #验证考生是否存在
-        applicant = Applicant.objects.get(applicant_id=applicant_id)
+        score_service = ScoreService()
+        scores = score_service.get_applicant_scores(applicant_id)
         
-        #获取该考生的成绩
-        try:
-            # 使用 select_related 优化查询
-            score = ApplicantScore.objects.select_related('applicant', 'subject').get(applicant=applicant)
-            
-            #构建成绩数据，包含学科信息
-            score_data = {
-                'applicant_id': applicant_id,
-                'applicant_name': applicant.name,
-                'preliminary_score': float(score.preliminary_score),
-                'final_score': float(score.final_score),
-                'total_score': float(score.preliminary_score + score.final_score),
-                'undergraduate_info': {
-                    'major': applicant.undergraduate_major,
-                    'school': applicant.undergraduate_school,
-                    'school_type': applicant.school_type
-                },
-                'subject_info': {
-                    'name': score.subject.name,
-                    'subject_id': score.subject.subject_id,
-                    'type': score.subject.type,
-                    'description': score.subject.description,
-                    'level': score.subject.level
-                } if score.subject else None
-            }
-            
-            return JsonResponse({
-                'status': 'success',
-                'data': score_data
-            })
-            
-        except ApplicantScore.DoesNotExist:
+        if not scores:
             return JsonResponse({
                 'status': 'error',
-                'message': '暂无成绩信息'
+                'message': '未找到成绩信息'
             }, status=404)
             
-    except Applicant.DoesNotExist:
         return JsonResponse({
-            'status': 'error',
-            'message': '考生不存在'
-        }, status=404)
+            'status': 'success',
+            'data': scores
+        })
+        
     except Exception as e:
         return JsonResponse({
             'status': 'error',
@@ -449,57 +398,32 @@ def get_applicant_scores(request, applicant_id):
 
 @api_view(['GET'])
 def get_admission_status(request, applicant_id):
+    """获取考生录取状态"""
     try:
-        #获取考生的所有志愿信息
-        preferences = MentorApplicantPreference.objects.filter(
-            applicant_id=applicant_id
-        ).select_related('mentor', 'applicant')
+        volunteer_service = VolunteerService()
+        result = volunteer_service.get_admission_status(applicant_id)
         
-        #获取考生成绩
-        try:
-            scores = ApplicantScore.objects.get(applicant_id=applicant_id)
-            score_info = {
-                'preliminary_score': scores.preliminary_score,
-                'final_score': scores.final_score,
-                'total_score': scores.preliminary_score + scores.final_score
-            }
-        except ApplicantScore.DoesNotExist:
-            score_info = None
-
-        #整理志愿状态信息
-        preference_status = []
-        for pref in preferences:
-            preference_status.append({
-                'rank': pref.preference_rank,
-                'mentor_name': pref.mentor.name,
-                'mentor_title': pref.mentor.title,
-                'status': pref.status,
-                'remarks': pref.remarks
-            })
-
-        #按志愿优先级排序
-        preference_status.sort(key=lambda x: x['rank'])
-
-        response_data = {
-            'preferences': preference_status,
-            'scores': score_info,
-            'overall_status': '待定'  #默认状态
-        }
-
-        #确定整体录取状态
-        if preferences.filter(status='Accepted').exists():
-            response_data['overall_status'] = '已录取'
-        elif preferences.filter(status='Pending').exists():
-            response_data['overall_status'] = '待定'
-        elif preferences.filter(status='Rejected').count() == preferences.count():
-            response_data['overall_status'] = '未录取'
-
-        return Response(response_data)
-
-    except Exception as e:
+        # 打印调试信息
+        print("Admission status result:", result)
+        
         return Response({
-            'error': str(e),
-            'message': '获取录取状态失败'
+            'status': 'success',
+            'data': result
+        })
+        
+    except ValueError as e:
+        print(f"ValueError in get_admission_status: {str(e)}")
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        print(f"Error in get_admission_status: {str(e)}")
+        logger.error(f"获取录取状态时发生错误: {str(e)}", exc_info=True)
+        return Response({
+            'status': 'error',
+            'message': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -525,7 +449,7 @@ class AdmissionCatalogViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='subjects', url_name='get_subjects')
     def get_subjects(self, request):
-        """获取所有一级学科及其二级学科"""
+        """获取所有一学科及其二级学科"""
         try:
             first_level_subjects = Subject.objects.filter(level='一级')
             result = []
@@ -589,7 +513,7 @@ class AdmissionCatalogViewSet(viewsets.ReadOnlyModelViewSet):
                 level='二级'
             )
 
-            logger.info(f"查询到的二级学科数量: {sub_subjects.count()}")
+            logger.info(f"查���到的二级学科数量: {sub_subjects.count()}")
             for subject in sub_subjects:
                 logger.info(f"二级学科: ID={subject.subject_id}, 名称={subject.name}, "
                             f"父学科ID={subject.parent_subject_id}")
@@ -619,7 +543,7 @@ class AdmissionCatalogViewSet(viewsets.ReadOnlyModelViewSet):
                 try:
                     subject = Subject.objects.get(subject_id=subject_id)
                     if subject.level == '一级':
-                        #如果是一级��科，查找所有相关的二级学科
+                        #如果是一级科，查找所有相关的二级学科
                         sub_subjects = Subject.objects.filter(
                             models.Q(subject_id=subject_id) |
                             models.Q(parent_subject_id=subject_id)
@@ -651,33 +575,68 @@ class AdmissionCatalogViewSet(viewsets.ReadOnlyModelViewSet):
 @require_http_methods(["GET"])
 def get_applicant_basic_info(request, applicant_id):
     try:
-        applicant = Applicant.objects.get(applicant_id=applicant_id)
-
-        #构建基本信息响应
-        basic_info = {
-            'name': applicant.name,
-            'birth_date': applicant.birth_date,
-            'id_card_number': applicant.id_card_number,
-            'origin': applicant.origin,
-            'undergraduate_school': applicant.undergraduate_school,
-            'undergraduate_major': applicant.undergraduate_major,
-            'school_type': applicant.school_type,
-            'email': applicant.email,
-            'phone': applicant.phone,
-            'resume': applicant.resume if hasattr(applicant, 'resume') else ''
-        }
-
+        applicant_service = ApplicantService()
+        basic_info = applicant_service.get_basic_info(applicant_id)
+        
+        if not basic_info:
+            return JsonResponse({
+                'status': 'error',
+                'message': '考生不存在'
+            }, status=404)
+            
         return JsonResponse({
             'status': 'success',
             'data': basic_info
         })
-
-    except Applicant.DoesNotExist:
+        
+    except Exception as e:
         return JsonResponse({
             'status': 'error',
-            'message': '考生不存在'
-        }, status=404)
+            'message': str(e)
+        }, status=500)
 
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_mentor_info(request, mentor_id):
+    try:
+        mentor_service = MentorService()
+        mentor_info = mentor_service.get_mentor_with_directions(mentor_id)
+        
+        if not mentor_info:
+            return JsonResponse({
+                'status': 'error',
+                'message': '导师不存在'
+            }, status=404)
+            
+        return JsonResponse({
+            'status': 'success',
+            'data': mentor_info
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_subject_info(request, subject_id):
+    try:
+        subject_service = SubjectService()
+        subject_info = subject_service.get_subject_hierarchy(subject_id)
+        
+        if not subject_info:
+            return JsonResponse({
+                'status': 'error',
+                'message': '学科不存在'
+            }, status=404)
+            
+        return JsonResponse({
+            'status': 'success',
+            'data': subject_info
+        })
+        
     except Exception as e:
         return JsonResponse({
             'status': 'error',

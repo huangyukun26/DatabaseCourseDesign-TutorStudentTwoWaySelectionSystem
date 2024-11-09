@@ -2,11 +2,10 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-#创建路由器
+# 创建路由器
 router = DefaultRouter()
 router.register(r'applicants', views.ApplicantViewSet)
 router.register(r'admission-catalogs', views.AdmissionCatalogViewSet, basename='admission-catalogs')
- 
 
 # API URL 配置
 urlpatterns = [
@@ -18,4 +17,7 @@ urlpatterns = [
     
     # 添加获取考生基本信息的路由
     path('applicant/basic-info/<str:applicant_id>/', views.get_applicant_basic_info, name='get_applicant_basic_info'),
+    
+    # 添加录取状态路由
+    path('admission/status/<str:applicant_id>/', views.get_admission_status, name='admission_status'),
 ]

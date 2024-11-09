@@ -72,22 +72,24 @@ import { userService } from '@/services/userService';
 export default {
   data() {
     return {
-      admissionInfo: null,
+      admissionInfo: {
+        basic_info: {},
+        preferences: [],
+        scores: null,
+        overall_status: '待定'
+      },
       loading: false,
       error: null
     };
   },
 
   computed: {
-    overallStatusClass() {
-      if (!this.admissionInfo) return '';
-      const status = this.admissionInfo.overall_status;
-      return `status-${status}`;
-    },
-
     getOverallStatusText() {
-      if (!this.admissionInfo) return '暂无信息';
-      return this.admissionInfo.overall_status;
+      return this.admissionInfo?.overall_status || '待定';
+    },
+    
+    overallStatusClass() {
+      return `status-${this.admissionInfo?.overall_status || '待定'}`;
     }
   },
 
@@ -106,13 +108,13 @@ export default {
         const response = await fetch(
           `http://localhost:8000/api/admission/status/${applicantId}`
         );
-        const data = await response.json();
+        const result = await response.json();
 
-        if (response.ok) {
-          this.admissionInfo = data;
+        if (response.ok && result.status === 'success') {
+          this.admissionInfo = result.data;
           this.error = null;
         } else {
-          this.error = data.message || '获取录取状态失败';
+          this.error = result.message || '获取录取状态失败';
         }
       } catch (error) {
         console.error('获取录取状态失败:', error);

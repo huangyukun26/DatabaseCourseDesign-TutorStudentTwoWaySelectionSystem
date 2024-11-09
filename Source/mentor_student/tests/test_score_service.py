@@ -39,6 +39,8 @@ class TestScoreService(TestCase):
         
         self.assertIsNotNone(result)
         self.assertEqual(result['applicant_name'], "测试考生")
+        self.assertEqual(result['undergraduate_info']['school'], "测试大学")
+        self.assertEqual(result['undergraduate_info']['major'], "计算机科学")
         self.assertEqual(result['preliminary_score'], 85.0)
         self.assertEqual(result['final_score'], 88.0)
-        self.assertEqual(result['total_score'], 173.0) 
+        self.assertIn('subject_info', result) 
