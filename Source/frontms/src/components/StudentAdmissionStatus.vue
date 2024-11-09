@@ -93,7 +93,9 @@ export default {
 
   methods: {
     async fetchAdmissionStatus() {
-      const applicantId = userService.getUserId();
+      const studentUser = userService.getUserByType('student');
+      const applicantId = studentUser?.applicant_id;
+      
       if (!applicantId) {
         this.error = '请先登录';
         return;

@@ -20,6 +20,8 @@ from rest_framework.response import Response
 from .models import AdmissionCatalog
 from .serializers import AdmissionCatalogSerializer
 from django_filters import rest_framework as filters
+from .dao.applicant_dao import ApplicantDAO
+from .dao.mentor_dao import MentorDAO
 
 
 @csrf_exempt
@@ -31,37 +33,31 @@ def login(request):
             password = data.get("password")
             captcha_input = data.get("captcha")
 
-            #验证验证码
             if captcha_input != request.session.get('captcha', ''):
                 return JsonResponse({"success": False, "error": "验证码错误"})
 
-            #判断是否为导师登录（ID前缀为6883）
             is_mentor = str(user_id).startswith('6883')
-
+            
             if is_mentor:
-                try:
-                    mentor = Mentor.objects.get(mentor_id=user_id)
-                    if mentor.id_card_number[-8:] == password:
-                        return JsonResponse({
-                            "success": True,
-                            "user_type": "mentor",
-                            "user_id": user_id
-                        })
-                except Mentor.DoesNotExist:
-                    return JsonResponse({"success": False, "error": "导师不存在"})
+                mentor_dao = MentorDAO()
+                mentor = mentor_dao.find_by_mentor_id(user_id)
+                if mentor and mentor.id_card_number[-8:] == password:
+                    return JsonResponse({
+                        "success": True,
+                        "user_type": "mentor",
+                        "user_id": user_id
+                    })
+                return JsonResponse({"success": False, "error": "导师不存在或密码错误"})
             else:
-                try:
-                    applicant = Applicant.objects.get(applicant_id=user_id)
-                    if applicant.id_card_number[-8:] == password:
-                        return JsonResponse({
-                            "success": True,
-                            "user_type": "student",
-                            "user_id": user_id
-                        })
-                except Applicant.DoesNotExist:
-                    return JsonResponse({"success": False, "error": "考生不存在"})
-
-            return JsonResponse({"success": False, "error": "密码错误"})
+                applicant_dao = ApplicantDAO()
+                applicant = applicant_dao.find_by_applicant_id(user_id)
+                if applicant and applicant.id_card_number[-8:] == password:
+                    return JsonResponse({
+                        "success": True,
+                        "user_type": "student",
+                        "user_id": user_id
+                    })
+                return JsonResponse({"success": False, "error": "考生不存在或密码错误"})
 
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
@@ -623,7 +619,7 @@ class AdmissionCatalogViewSet(viewsets.ReadOnlyModelViewSet):
                 try:
                     subject = Subject.objects.get(subject_id=subject_id)
                     if subject.level == '一级':
-                        #如果是一级学科，查找所有相关的二级学科
+                        #如果是一级��科，查找所有相关的二级学科
                         sub_subjects = Subject.objects.filter(
                             models.Q(subject_id=subject_id) |
                             models.Q(parent_subject_id=subject_id)

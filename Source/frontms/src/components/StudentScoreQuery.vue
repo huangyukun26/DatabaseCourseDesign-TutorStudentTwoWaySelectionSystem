@@ -81,6 +81,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import { userService } from '@/services/userService'
 
 export default {
   name: 'StudentScoreQuery',
@@ -100,20 +101,17 @@ export default {
     // 获取考生ID
     const fetchApplicantId = () => {
       try {
-        const userStr = localStorage.getItem('user')
-        if (userStr) {
-          const user = JSON.parse(userStr)
-          if (user && user.applicant_id) {
-            applicantId.value = user.applicant_id
-            return true
-          }
+        const studentUser = userService.getUserByType('student');
+        if (studentUser?.applicant_id) {
+          applicantId.value = studentUser.applicant_id;
+          return true;
         }
-        error.value = '请先登录'
-        return false
+        error.value = '请先登录';
+        return false;
       } catch (e) {
-        console.error('获取考生信息失败:', e)
-        error.value = '获取用户信息失败'
-        return false
+        console.error('获取考生信息失败:', e);
+        error.value = '获取用户信息失败';
+        return false;
       }
     }
 

@@ -98,6 +98,7 @@ export default {
           const userInfo = {
             isAuthenticated: true,
             userType: currentUserType,
+            userId: this.applicantId,
             loginTime: new Date().toISOString(),
             ...(currentUserType === 'student' 
               ? { applicant_id: this.applicantId }
