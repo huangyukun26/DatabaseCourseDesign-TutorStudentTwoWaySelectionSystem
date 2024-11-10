@@ -100,7 +100,8 @@ class MentorService:
                         'total_quota': 0,
                         'used_quota': 0,
                         'catalogs': [],
-                        'sub_subjects': {}
+                        'sub_subjects': {},
+                        'remaining_quota': 0
                     }
                 
                 #更新配额
@@ -217,7 +218,15 @@ class MentorService:
                     
         except Exception as e:
             logger.error(f"Error getting mentor admission quota: {str(e)}", exc_info=True)
-            raise
+            # 返回默认配额信息
+            return {
+                'overall': {
+                    'total_quota': 0,
+                    'used_quota': 0,
+                    'remaining_quota': 0
+                },
+                'by_subject': {}
+            }
     
     def process_student_application(self, mentor_id: int, applicant_id: int, action: str, remarks: str = '') -> Dict:
         """处理学生申请（考虑一级和二级学科限制）"""
@@ -272,16 +281,25 @@ class MentorService:
             preference.remarks = remarks
             preference.save()
             
-            #更新返回结构
-            quota_result = self.get_mentor_admission_quota(mentor_id)
+            # 获取更新后的配额信息
+            quota_info = self.get_mentor_admission_quota(mentor_id)
+            
+            # 返回结果
             return {
                 'status': 'success',
                 'message': '处理成功',
-                'updated_quota': quota_result['quota_info']
+                'quota_info': quota_info,  # 直接返回完整的配额信息
+                'preference': {
+                    'preference_id': preference.preference_id,
+                    'status': preference.status,
+                    'remarks': preference.remarks
+                }
             }
             
+        except ValueError as e:
+            raise ValueError(str(e))
         except Exception as e:
-            print(f"Error in process_student_application: {str(e)}")
+            logger.error(f"Error in process_student_application: {str(e)}", exc_info=True)
             raise
     
     def get_mentor_students(self, mentor_id):

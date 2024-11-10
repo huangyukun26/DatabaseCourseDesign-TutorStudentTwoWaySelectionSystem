@@ -170,6 +170,7 @@ export default {
         if (data.status === 'success') {
           studentList.value = data.students || []
           
+          // 确保配额信息的结构完整
           quotaInfo.value = {
             overall: {
               total_quota: 0,
@@ -179,10 +180,14 @@ export default {
             by_subject: {}
           }
           
-          if (data.quota_info) {
+          // 如果后端返回了配额信息，则使用后端数据更新
+          if (data.quota_info && data.quota_info.overall) {
             quotaInfo.value = {
-              ...quotaInfo.value,
-              ...data.quota_info
+              overall: {
+                ...quotaInfo.value.overall,
+                ...data.quota_info.overall
+              },
+              by_subject: data.quota_info.by_subject || {}
             }
           }
         } else {
@@ -207,32 +212,34 @@ export default {
     //修改检查是否可以接受学生的方法
     const canAcceptStudent = (studentData) => {
       try {
-        //如果有更高优先级志愿已被接受，不能接受
+        // 如果有更高优先级志愿已被接受，不能接受
         if (hasHigherPreferenceAccepted(studentData)) {
           return false
         }
 
-        //如果当前申请已被接受，不能再接受
+        // 如果当前申请已被接受，不能再接受
         if (studentData.status === 'Accepted') {
           return false
         }
 
-        //检查配额
-        if (!quotaInfo.value) {
-          console.warn('No quota info available')
+        // 检查配额信息是否存在且有效
+        if (!quotaInfo.value || !quotaInfo.value.overall) {
+          console.warn('Invalid quota info')
           return false
         }
 
-        //检查总体配额
+        // 检查总体配额
         if (quotaInfo.value.overall.remaining_quota <= 0) {
           return false
         }
 
-        //如果有学科特定配额，则检查
+        // 检查学科配额
         const parentSubjectId = studentData.parent_subject_id
-        if (parentSubjectId && quotaInfo.value.by_subject) {
+        if (parentSubjectId && 
+            quotaInfo.value.by_subject && 
+            quotaInfo.value.by_subject[parentSubjectId]) {
           const parentQuota = quotaInfo.value.by_subject[parentSubjectId]
-          if (parentQuota && parentQuota.remaining_quota <= 0) {
+          if (parentQuota.remaining_quota <= 0) {
             return false
           }
         }
@@ -253,6 +260,26 @@ export default {
           type: 'warning'
         })
 
+        // 立即更新前端状态
+        const index = studentList.value.findIndex(student => student.applicant_id === studentData.applicant_id)
+        if (index !== -1) {
+          studentList.value = studentList.value.map((student, idx) => {
+            if (idx === index) {
+              return { ...student, status: 'Accepted' }
+            }
+            if (student.applicant_id === studentData.applicant_id && 
+                student.preference_rank > studentData.preference_rank) {
+              return {
+                ...student,
+                status: 'Rejected',
+                remarks: '由于高优先级志愿被录取自动拒绝'
+              }
+            }
+            return student
+          })
+        }
+
+        // 发送请求到后端
         const response = await fetch(`http://localhost:8000/api/mentor/${mentorId.value}/process-application/`, {
           method: 'POST',
           headers: {
@@ -267,16 +294,32 @@ export default {
         })
 
         const data = await response.json()
-        if (data.status === 'success') {
+        
+        if (response.ok && data.status === 'success') {
           ElMessage.success('已接受该学生')
-          await fetchData()  //重新获取最新数据
+          
+          // 更新配额信息
+          if (data.quota_info) {
+            quotaInfo.value = data.quota_info
+          }
+          
+          // 延迟获取最新数据
+          setTimeout(() => {
+            fetchData().catch(err => {
+              console.error('Background data refresh failed:', err)
+            })
+          }, 1000)
         } else {
+          // 如果后端失败，回滚前端状态
+          await fetchData()
           ElMessage.error(data.message || '操作失败')
         }
       } catch (error) {
         if (error !== 'cancel') {
           console.error('Error accepting student:', error)
           ElMessage.error('操作失败')
+          // 发生错误时回滚状态
+          await fetchData()
         }
       }
     }

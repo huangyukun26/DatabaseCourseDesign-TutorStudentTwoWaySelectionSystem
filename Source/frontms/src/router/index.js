@@ -47,7 +47,7 @@ const routes = [
     },
     {
       path: 'admission-plan',
-      name: 'admission-plan',
+      name: 'student-admission-plan',
       component: AdmissionPlan,
       meta: { requiresAuth: true }
     },
@@ -69,7 +69,7 @@ const routes = [
       },
       {
       path: 'admission-plan',
-      name: 'admission-plan',
+      name: 'mentor-admission-plan',
       component: AdmissionPlan,
       meta: { requiresAuth: true }
       },

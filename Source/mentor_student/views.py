@@ -598,7 +598,7 @@ def process_student_application(request, mentor_id):
     try:
         data = json.loads(request.body)
         applicant_id = data.get('applicant_id')
-        action = data.get('action')  #'Accepted' 或 'Rejected'
+        action = data.get('action')
         remarks = data.get('remarks', '')
         
         if not all([applicant_id, action]) or action not in ['Accepted', 'Rejected']:
@@ -608,6 +608,8 @@ def process_student_application(request, mentor_id):
             }, status=400)
         
         mentor_service = MentorService()
+        
+        # 先处理申请
         result = mentor_service.process_student_application(
             mentor_id,
             applicant_id,
@@ -615,28 +617,55 @@ def process_student_application(request, mentor_id):
             remarks
         )
         
-        #如果接受了申请，自动处理其他志愿
+        # 如果接受了申请，自动处理其他志愿
         if action == 'Accepted':
             try:
-                #获取当前志愿的优先级
                 current_preference = MentorApplicantPreference.objects.get(
                     mentor_id=mentor_id,
                     applicant_id=applicant_id
                 )
                 
-                #自动拒绝所有低优先级的志愿，并在remarks中标记原因
-                MentorApplicantPreference.objects.filter(
+                # 自动拒绝所有低优先级的志愿
+                lower_preferences = MentorApplicantPreference.objects.filter(
                     applicant_id=applicant_id,
                     preference_rank__gt=current_preference.preference_rank
-                ).update(
-                    status='Rejected',
-                    remarks='由于高志愿被录取自动拒绝'  # 使用remarks存储拒绝原因
                 )
                 
-            except Exception as e:
-                logger.error(f"Error processing other preferences: {str(e)}")
+                rejected_count = 0
+                for pref in lower_preferences:
+                    pref.status = 'Rejected'
+                    pref.remarks = '由于高优先级志愿被录取自动拒绝'
+                    pref.save()
+                    rejected_count += 1
                 
-        return JsonResponse(result)
+                if rejected_count > 0:
+                    logger.info(f"Automatically rejected {rejected_count} lower preferences for applicant {applicant_id}")
+                
+            except Exception as e:
+                logger.error(f"Error in rejecting lower preferences: {str(e)}")
+                # 继续执行，不影响主流程
+        
+        # 最后获取更新后的配额信息
+        try:
+            quota_info = mentor_service.get_mentor_admission_quota(mentor_id)
+        except Exception as e:
+            logger.error(f"Error getting quota info: {str(e)}")
+            # 如果获取配额信息失败，返回空对象
+            quota_info = {
+                'overall': {
+                    'total_quota': 0,
+                    'used_quota': 0,
+                    'remaining_quota': 0
+                },
+                'by_subject': {}
+            }
+        
+        # 返回处理结果
+        return JsonResponse({
+            'status': 'success',
+            'result': result,
+            'quota_info': quota_info
+        })
         
     except ValueError as e:
         return JsonResponse({
@@ -645,6 +674,7 @@ def process_student_application(request, mentor_id):
         }, status=400)
         
     except Exception as e:
+        logger.error(f"Error in process_student_application: {str(e)}", exc_info=True)
         return JsonResponse({
             'status': 'error',
             'message': str(e)
