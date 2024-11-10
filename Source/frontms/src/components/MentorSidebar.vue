@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar">
     <div class="menu-item" @click="navigateTo('mentor-admission-plan')">招生计划</div>
-    <div class="menu-item" >导师基本信息</div>
+    <div class="menu-item" @click="navigateTo('mentor-basic-info')">导师基本信息</div>
     <div class="menu-item" @click="navigateTo('mentor-student-list')">学生志愿申请</div>
     <div class="menu-item" @click="navigateTo('mentor-all-applications')">全院学生申请信息</div>
     <div class="menu-item" @click="navigateTo('mentor-accepted-students')">已录取学生</div>
@@ -19,11 +19,11 @@ export default {
 </script>
 
 <style scoped>
-/* 使用与 StudentSidebar.vue 相同的样式 */
 .sidebar {
   width: 250px;
   background-color: #F1F1F1;
   padding: 10px;
+  min-width: 250px;
 }
 
 .menu-item {

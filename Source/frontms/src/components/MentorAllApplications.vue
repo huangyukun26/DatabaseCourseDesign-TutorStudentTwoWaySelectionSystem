@@ -132,10 +132,35 @@ export default {
 <style scoped>
 .all-applications {
   padding: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: calc(100vh - 100px);
+  overflow-y: auto;
+  position: relative;
 }
 
 .student-table {
   margin-top: 20px;
+  width: 100%;
+  max-width: 100%;
+}
+
+:deep(.el-table) {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+:deep(.el-table__body) {
+  width: 100% !important;
+}
+
+.student-info,
+.application-info,
+.score-info {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .student-info h4 {
@@ -159,6 +184,7 @@ export default {
 
 .application-info {
   color: #606266;
+
 }
 
 .volunteer-item {
@@ -183,7 +209,5 @@ export default {
   margin: 8px 0;
 }
 
-.volunteer-item:last-child {
-  margin-bottom: 0;
-}
+
 </style> 

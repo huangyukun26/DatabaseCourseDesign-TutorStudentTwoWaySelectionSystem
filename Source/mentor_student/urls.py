@@ -30,5 +30,6 @@ urlpatterns = [
     path('mentor/<int:mentor_id>/accepted-students/', views.get_mentor_accepted_students, name='get_mentor_accepted_students'),
     #获取全院学生申请信息
     path('mentor/all-applications/', views.get_all_student_applications, name='get_all_student_applications'),
-   
+    #导师基本信息路由
+    path('mentor/basic-info/<int:mentor_id>/', views.get_mentor_basic_info, name='get_mentor_basic_info'),
 ]

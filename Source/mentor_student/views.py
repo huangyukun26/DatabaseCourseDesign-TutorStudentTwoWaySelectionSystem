@@ -719,3 +719,29 @@ def get_all_student_applications(request):
             'status': 'error',
             'message': str(e)
         }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_mentor_basic_info(request, mentor_id):
+    """获取导师基本信息"""
+    try:
+        mentor_service = MentorService()
+        mentor_info = mentor_service.get_mentor_with_directions(mentor_id)
+        
+        if not mentor_info:
+            return JsonResponse({
+                'status': 'error',
+                'message': '导师不存在'
+            }, status=404)
+            
+        return JsonResponse({
+            'status': 'success',
+            'data': mentor_info
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting mentor basic info: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)

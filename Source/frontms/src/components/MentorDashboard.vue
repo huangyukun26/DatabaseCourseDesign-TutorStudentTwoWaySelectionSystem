@@ -86,11 +86,14 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 100%;
 }
 
 .main-content {
   display: flex;
   flex: 1;
+  overflow: hidden;
+  position: relative;
 }
 
 .content {

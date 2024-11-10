@@ -9,6 +9,7 @@ import AdmissionPlan from "@/components/AdmissionPlan.vue";
 import MentorStudentList from "@/components/MentorStudentList.vue";
 import MentorAcceptedStudents from '@/components/MentorAcceptedStudents.vue'
 import MentorAllApplications from '@/components/MentorAllApplications.vue'
+import MentorBasicInfo from '@/components/MentorBasicInfo.vue'
 const routes = [
   {
     path: '/',
@@ -74,14 +75,20 @@ const routes = [
       meta: { requiresAuth: true }
       },
       {
-        path: '/mentor/accepted-students',
+        path: 'accepted-students',
         name: 'mentor-accepted-students',
         component: MentorAcceptedStudents
       },
       {
-        path: '/mentor/all-applications',
+        path: 'all-applications',
         name: 'mentor-all-applications',
         component: MentorAllApplications
+      },
+      {
+        path: 'basic-info',
+        name: 'mentor-basic-info',
+        component: MentorBasicInfo,
+        meta: { requiresAuth: true }
       }
 
       ]
