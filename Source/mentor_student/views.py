@@ -101,95 +101,6 @@ class ApplicantViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Applicant not found'}, status=status.HTTP_404_NOT_FOUND)  
 
 @csrf_exempt
-@require_http_methods(["POST"])
-def submit_volunteer(request):
-    """
-    提交志愿选择
-    请求体格式：
-    {
-        "applicant_id": "考生ID",
-        "volunteers": [
-            {"mentor_id": 1, "rank": 1},
-            {"mentor_id": 2, "rank": 2},
-            {"mentor_id": 3, "rank": 3}
-        ]
-    }
-    """
-    try:
-        data = json.loads(request.body)
-        applicant_id = data.get('applicant_id')
-        volunteers = data.get('volunteers', [])
-
-        #验证考生是否存在
-        try:
-            applicant = Applicant.objects.get(applicant_id=applicant_id)
-        except ObjectDoesNotExist:
-            return JsonResponse({'status': 'error', 'message': '考生不存在'}, status=404)
-
-        #检查是否已经提交过志愿
-        existing_preferences = MentorApplicantPreference.objects.filter(applicant=applicant).exists()
-        if existing_preferences:
-            return JsonResponse({'status': 'error', 'message': '已提交过志愿，不可修改'}, status=400)
-
-        #验证并创建志愿选择
-        for volunteer in volunteers:
-            mentor_id = volunteer.get('mentor_id')
-            rank = volunteer.get('rank')
-
-            try:
-                mentor = Mentor.objects.get(mentor_id=mentor_id)
-            except ObjectDoesNotExist:
-                return JsonResponse({'status': 'error', 'message': f'导师 {mentor_id} 不存在'}, status=404)
-
-            #创建志愿记录
-            MentorApplicantPreference.objects.create(
-                applicant=applicant,
-                mentor=mentor,
-                preference_rank=rank,
-                status='Pending'
-            )
-
-        return JsonResponse({
-            'status': 'success',
-            'message': '志愿提交成功',
-            'data': {
-                'applicant_id': applicant_id,
-                'volunteers': volunteers
-            }
-        })
-
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': '无效的请求数据'}, status=400)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-@csrf_exempt
-@require_http_methods(["GET"])
-def get_volunteer_status(request, applicant_id):
-    """获取考生的志愿选择状态"""
-    try:
-        volunteer_service = VolunteerService()
-        result = volunteer_service.get_volunteer_status(applicant_id)
-        
-        return JsonResponse({
-            'status': 'success',
-            'data': result
-        })
-        
-    except ValueError as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=404)
-        
-    except Exception as e:
-        logger.error(f"获取志愿状态时发生错误: {str(e)}", exc_info=True)
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
-
-@csrf_exempt
 @require_http_methods(["GET"])
 def get_volunteer_status(request, applicant_id):
     """获取考生的志愿选择状态"""
@@ -513,7 +424,7 @@ class AdmissionCatalogViewSet(viewsets.ReadOnlyModelViewSet):
                 level='二级'
             )
 
-            logger.info(f"查���到的二级学科数量: {sub_subjects.count()}")
+            logger.info(f"查到的二级学科数量: {sub_subjects.count()}")
             for subject in sub_subjects:
                 logger.info(f"二级学科: ID={subject.subject_id}, 名称={subject.name}, "
                             f"父学科ID={subject.parent_subject_id}")
@@ -636,6 +547,104 @@ def get_subject_info(request, subject_id):
             'status': 'success',
             'data': subject_info
         })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_mentor_students(request, mentor_id):
+    try:
+        service = MentorService()
+        # 获取导师的配额信息和学生列表
+        quota_info = service.get_mentor_admission_quota(mentor_id)
+        students = service.get_mentor_students(mentor_id)
+        
+        # 对每个学生处理高优先级志愿信息
+        for student in students:
+            # 获取该学生的所有更高优先级志愿
+            higher_preferences = MentorApplicantPreference.objects.filter(
+                applicant_id=student['applicant_id'],
+                preference_rank__lt=student['preference_rank']
+            ).order_by('preference_rank')
+            
+            # 检查是否有更高优先级志愿被接受
+            higher_accepted = higher_preferences.filter(status='Accepted').exists()
+            
+            # 添加高优先级状态信息
+            student['higher_preference_status'] = 'Accepted' if higher_accepted else None
+        
+        # 构造返回结构
+        result = {
+            'status': 'success',
+            'quota_info': quota_info,
+            'students': students
+        }
+        
+        return JsonResponse(result)
+        
+    except Exception as e:
+        logger.error(f"Error in get_mentor_students: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def process_student_application(request, mentor_id):
+    """处理学生申请"""
+    try:
+        data = json.loads(request.body)
+        applicant_id = data.get('applicant_id')
+        action = data.get('action')  # 'Accepted' 或 'Rejected'
+        remarks = data.get('remarks', '')
+        
+        if not all([applicant_id, action]) or action not in ['Accepted', 'Rejected']:
+            return JsonResponse({
+                'status': 'error',
+                'message': '无效的请求参数'
+            }, status=400)
+        
+        mentor_service = MentorService()
+        result = mentor_service.process_student_application(
+            mentor_id,
+            applicant_id,
+            action,
+            remarks
+        )
+        
+        # 如果接受了申请，自动处理其他志愿
+        if action == 'Accepted':
+            try:
+                # 获取当前志愿的优先级
+                current_preference = MentorApplicantPreference.objects.get(
+                    mentor_id=mentor_id,
+                    applicant_id=applicant_id
+                )
+                
+                # 自动拒绝所有低优先级的志愿，并在remarks中标记原因
+                MentorApplicantPreference.objects.filter(
+                    applicant_id=applicant_id,
+                    preference_rank__gt=current_preference.preference_rank
+                ).update(
+                    status='Rejected',
+                    remarks='由于高志愿被录取自动拒绝'  # 使用remarks存储拒绝原因
+                )
+                
+            except Exception as e:
+                logger.error(f"Error processing other preferences: {str(e)}")
+                
+        return JsonResponse(result)
+        
+    except ValueError as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
         
     except Exception as e:
         return JsonResponse({

@@ -188,3 +188,20 @@ def create_user_role_for_mentor(sender, instance, created, **kwargs):
             object_id=instance.mentor_id,
             role=role
         )
+
+@receiver(post_save, sender=MentorApplicantPreference)
+def handle_preference_status_change(sender, instance, created, **kwargs):
+    if not created and instance.status == 'Accepted':
+        # 获取该学生的所有志愿
+        all_preferences = MentorApplicantPreference.objects.filter(
+            applicant=instance.applicant
+        ).order_by('preference_rank')
+        
+        # 自动拒绝所有低优先级的志愿
+        lower_preferences = all_preferences.filter(
+            preference_rank__gt=instance.preference_rank
+        )
+        lower_preferences.update(status='Rejected')
+        
+        # 可选：记录日志
+        print(f"Automatically rejected {lower_preferences.count()} lower preferences for applicant {instance.applicant.name}")

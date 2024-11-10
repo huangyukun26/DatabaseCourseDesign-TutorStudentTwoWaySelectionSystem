@@ -6,6 +6,7 @@ import StudentVolunteerSelection from "@/components/StudentVolunteerSelection.vu
 import StudentScoreQuery from "@/components/StudentScoreQuery.vue";
 import StudentAdmissionStatus from "@/components/StudentAdmissionStatus.vue";
 import AdmissionPlan from "@/components/AdmissionPlan.vue";
+import MentorStudentList from "@/components/MentorStudentList.vue";
 
 const routes = [
   {
@@ -58,6 +59,21 @@ const routes = [
     path: '/mentor/dashboard',
     name: 'MentorDashboard',
     component: () => import('@/components/MentorDashboard.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'sutdent-list',
+        name: 'mentor-student-list',
+        component: MentorStudentList,
+        meta: { requiresAuth: true }
+      },
+      {
+      path: 'admission-plan',
+      name: 'admission-plan',
+      component: AdmissionPlan,
+      meta: { requiresAuth: true }
+    }
+      ]
   }
 
 ];
