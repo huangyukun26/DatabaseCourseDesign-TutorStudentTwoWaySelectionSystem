@@ -1,6 +1,6 @@
 <template>
   <div class="logo">
-      Beijing Forestry University Master’s Admissions System By Four Stopwatch Group
+      Beijing Forestry University XINXIXUEYUAN Graduate Student Admissions System
     </div>
   <div class="login-container">
 
@@ -8,7 +8,7 @@
 
 
     <div class="welcome">
-      欢迎报考北京林业大学！
+      欢迎报考北京林业大学<br>信息学院！
     </div>
 
     <div class="login-box">
@@ -187,7 +187,8 @@ html, body {
   left: 100px; 
   z-index: 3; 
   color: white; 
-  font-size: 100px; 
+  font-size: 100px;
+  text-align: center;
 
 }
 
