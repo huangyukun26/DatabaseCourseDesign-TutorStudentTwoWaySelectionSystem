@@ -8,7 +8,6 @@ import string
 from .models import Applicant
 from .serializers import ApplicantSerializer, SubjectSerializer
 from rest_framework.decorators import action
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view
 from .models import MentorApplicantPreference, ApplicantScore
 from rest_framework import viewsets, status
@@ -39,11 +38,11 @@ def login(request):
         password = data.get("password")
         captcha_input = data.get("captcha")
 
-        # 验证验证码
+        #验证验证码
         if captcha_input != request.session.get('captcha', ''):
             return JsonResponse({"success": False, "error": "验证码错误"})
 
-        # 判断是否为导师登录
+        #判断是否为导师登录
         is_mentor = str(user_id).startswith('6883')
         
         if is_mentor:
@@ -313,8 +312,7 @@ def get_admission_status(request, applicant_id):
     try:
         volunteer_service = VolunteerService()
         result = volunteer_service.get_admission_status(applicant_id)
-        
-        # 打印调试信息
+
         print("Admission status result:", result)
         
         return Response({
@@ -559,25 +557,25 @@ def get_subject_info(request, subject_id):
 def get_mentor_students(request, mentor_id):
     try:
         service = MentorService()
-        # 获取导师的配额信息和学生列表
+        #获取导师的配额信息和学生列表
         quota_info = service.get_mentor_admission_quota(mentor_id)
         students = service.get_mentor_students(mentor_id)
         
-        # 对每个学生处理高优先级志愿信息
+        #对每个学生处理高优先级志愿信息
         for student in students:
-            # 获取该学生的所有更高优先级志愿
+            #获取该学生的所有更高优先级志愿
             higher_preferences = MentorApplicantPreference.objects.filter(
                 applicant_id=student['applicant_id'],
                 preference_rank__lt=student['preference_rank']
             ).order_by('preference_rank')
             
-            # 检查是否有更高优先级志愿被接受
+            #检查是否有更高优先级志愿被接受
             higher_accepted = higher_preferences.filter(status='Accepted').exists()
             
-            # 添加高优先级状态信息
+            #添加高优先级状态信息
             student['higher_preference_status'] = 'Accepted' if higher_accepted else None
         
-        # 构造返回结构
+        #构造返回结构
         result = {
             'status': 'success',
             'quota_info': quota_info,
@@ -600,7 +598,7 @@ def process_student_application(request, mentor_id):
     try:
         data = json.loads(request.body)
         applicant_id = data.get('applicant_id')
-        action = data.get('action')  # 'Accepted' 或 'Rejected'
+        action = data.get('action')  #'Accepted' 或 'Rejected'
         remarks = data.get('remarks', '')
         
         if not all([applicant_id, action]) or action not in ['Accepted', 'Rejected']:
@@ -617,16 +615,16 @@ def process_student_application(request, mentor_id):
             remarks
         )
         
-        # 如果接受了申请，自动处理其他志愿
+        #如果接受了申请，自动处理其他志愿
         if action == 'Accepted':
             try:
-                # 获取当前志愿的优先级
+                #获取当前志愿的优先级
                 current_preference = MentorApplicantPreference.objects.get(
                     mentor_id=mentor_id,
                     applicant_id=applicant_id
                 )
                 
-                # 自动拒绝所有低优先级的志愿，并在remarks中标记原因
+                #自动拒绝所有低优先级的志愿，并在remarks中标记原因
                 MentorApplicantPreference.objects.filter(
                     applicant_id=applicant_id,
                     preference_rank__gt=current_preference.preference_rank
@@ -647,6 +645,46 @@ def process_student_application(request, mentor_id):
         }, status=400)
         
     except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_mentor_accepted_students(request, mentor_id):
+    """取导师已录取的学生列表"""
+    try:
+        mentor_service = MentorService()
+        students = mentor_service.get_mentor_accepted_students(mentor_id)
+        
+        return JsonResponse({
+            'status': 'success',
+            'students': students
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting accepted students: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_all_student_applications(request):
+    """获取全院学生申请信息"""
+    try:
+        mentor_service = MentorService()
+        applications = mentor_service.get_all_student_applications()
+        
+        return JsonResponse({
+            'status': 'success',
+            'applications': applications
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting all student applications: {str(e)}", exc_info=True)
         return JsonResponse({
             'status': 'error',
             'message': str(e)

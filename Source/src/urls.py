@@ -2,14 +2,14 @@ from django.contrib import admin
 from django.urls import path, include
 from mentor_student import views
 
-# 主 URL 配置
+#主 URL 配置
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # REST framework API 路由
+    #REST framework API 路由
     path('api/', include('mentor_student.urls')),  # 包含所有 API 路由
     
-    # 独立的 API 端点
+    #独立的 API 端点
     path('api/login/', views.login, name='login'),
     path('api/generate_captcha/', views.generate_captcha, name='generate_captcha'),
     path('api/volunteer/submit/', views.submit_volunteer, name='submit_volunteer'),

@@ -1,12 +1,12 @@
-// 定义不同用户类型的存储键
+//定义不同用户类型的存储键
 const STUDENT_KEY = 'student-user';
 const MENTOR_KEY = 'mentor-user';
 
 export const userService = {
-  // 存储用户信息
+  //存储用户信息
   setUser(userData) {
     try {
-      // 根据用户类型选择存储键，但不清除其他类型的用户信息
+      //根据用户类型选择存储键，但不清除其他类型的用户信息
       const storageKey = userData.userType === 'mentor' ? MENTOR_KEY : STUDENT_KEY;
       console.log(`Setting ${userData.userType} user data:`, userData);
       localStorage.setItem(storageKey, JSON.stringify(userData));
@@ -15,7 +15,7 @@ export const userService = {
     }
   },
 
-  // 获取特定类型用户信息
+  //获取特定类型用户信息
   getUserByType(userType) {
     try {
       const key = userType === 'mentor' ? MENTOR_KEY : STUDENT_KEY;
@@ -29,7 +29,7 @@ export const userService = {
     }
   },
 
-  // 检查特定类型用户是否已登录
+  //检查特定类型用户是否已登录
   isAuthenticatedByType(userType) {
     const user = this.getUserByType(userType);
     const isAuth = user && user.isAuthenticated;
@@ -37,27 +37,27 @@ export const userService = {
     return isAuth;
   },
 
-  // 获取特定类型用户ID
+  //获取特定类型用户ID
   getUserId(userType) {
     const user = this.getUserByType(userType);
     if (!user) return null;
     return userType === 'mentor' ? user.mentor_id : user.applicant_id;
   },
 
-  // 清除特定类型用户信息
+  //清除特定类型用户信息
   clearUserByType(userType) {
     const key = userType === 'mentor' ? MENTOR_KEY : STUDENT_KEY;
     console.log(`Clearing ${userType} user data`);
     localStorage.removeItem(key);
   },
 
-  // 清除所有用户信息
+  //清除所有用户信息
   clearAllUsers() {
     localStorage.removeItem(STUDENT_KEY);
     localStorage.removeItem(MENTOR_KEY);
   },
 
-  // 更新特定类型用户信息
+  //更新特定类型用户信息
   updateUser(newData) {
     if (!newData.userType) return;
     const key = newData.userType === 'mentor' ? MENTOR_KEY : STUDENT_KEY;

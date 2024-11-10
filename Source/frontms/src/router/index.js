@@ -7,7 +7,8 @@ import StudentScoreQuery from "@/components/StudentScoreQuery.vue";
 import StudentAdmissionStatus from "@/components/StudentAdmissionStatus.vue";
 import AdmissionPlan from "@/components/AdmissionPlan.vue";
 import MentorStudentList from "@/components/MentorStudentList.vue";
-
+import MentorAcceptedStudents from '@/components/MentorAcceptedStudents.vue'
+import MentorAllApplications from '@/components/MentorAllApplications.vue'
 const routes = [
   {
     path: '/',
@@ -49,8 +50,7 @@ const routes = [
       name: 'admission-plan',
       component: AdmissionPlan,
       meta: { requiresAuth: true }
-    }
-   
+    },
 
   ]
   },
@@ -72,10 +72,22 @@ const routes = [
       name: 'admission-plan',
       component: AdmissionPlan,
       meta: { requiresAuth: true }
-    }
-      ]
-  }
+      },
+      {
+        path: '/mentor/accepted-students',
+        name: 'mentor-accepted-students',
+        component: MentorAcceptedStudents
+      },
+      {
+        path: '/mentor/all-applications',
+        name: 'mentor-all-applications',
+        component: MentorAllApplications
+      }
 
+      ]
+  },
+
+  
 ];
 
 const router = createRouter({

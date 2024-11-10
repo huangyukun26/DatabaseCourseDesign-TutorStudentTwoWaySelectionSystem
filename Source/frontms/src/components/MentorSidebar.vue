@@ -3,8 +3,8 @@
     <div class="menu-item" @click="navigateTo('admission-plan')">招生计划</div>
     <div class="menu-item" >导师基本信息</div>
     <div class="menu-item" @click="navigateTo('mentor-student-list')">学生志愿申请</div>
-    <div class="menu-item" >全院学生申请信息</div>
-    <div class="menu-item" >已录取学生</div>
+    <div class="menu-item" @click="navigateTo('mentor-all-applications')">全院学生申请信息</div>
+    <div class="menu-item" @click="navigateTo('mentor-accepted-students')">已录取学生</div>
   </div>
 </template>
 

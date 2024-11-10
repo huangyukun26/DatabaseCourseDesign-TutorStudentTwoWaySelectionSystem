@@ -15,7 +15,7 @@ class MentorSubjectService:
     def get_subject_mentors(self, applicant_id: int) -> Optional[Dict]:
         """获取考生报考学科的导师信息"""
         try:
-            # 获取考生和成绩信息
+            #获取考生和成绩信息
             applicant = self.applicant_dao.find_by_applicant_id(applicant_id)
             if not applicant:
                 raise ValueError("考生不存在")
@@ -26,7 +26,7 @@ class MentorSubjectService:
             
             main_subject = scores.subject
             
-            # 构建学科信息
+            #构建学科信息
             subject_data = {
                 'id': main_subject.subject_id,
                 'name': main_subject.name,
@@ -34,14 +34,14 @@ class MentorSubjectService:
                 'type': main_subject.type
             }
             
-            # 获取导师研究方向
+            #获取导师研究方向
             current_year = datetime.now().year
             mentor_directions = self._get_mentor_directions(
                 main_subject.subject_id,
                 current_year
             )
             
-            # 按研究方向分组
+            #按研究方向分组
             direction_groups = self._group_by_direction(mentor_directions)
             
             return {

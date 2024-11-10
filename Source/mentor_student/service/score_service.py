@@ -20,12 +20,12 @@ class ScoreService:
             if not scores:
                 return None
                 
-            # 获取考生信息
+            #获取考生信息
             applicant = self.applicant_dao.find_by_applicant_id(applicant_id)
             if not applicant:
                 return None
                 
-            # 获取学科信息
+            #获取学科信息
             subject = scores.subject if scores.subject else None
                 
             return {

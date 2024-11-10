@@ -140,7 +140,7 @@ export default {
     const quotaInfo = ref(null)
     const mentorId = ref(null)
 
-    // 获取数据的方法
+    //获取数据的方法
     const fetchData = async () => {
       try {
         const mentorInfo = userService.getUserByType('mentor')
@@ -194,7 +194,7 @@ export default {
       }
     }
 
-    // 修改检查高优先级志愿状态的方法
+    //修改检查高优先级志愿状态的方法
     const hasHigherPreferenceAccepted = (studentData) => {
       try {
         return studentData.higher_preference_status === 'Accepted'
@@ -204,31 +204,31 @@ export default {
       }
     }
 
-    // 修改检查是否可以接受学生的方法
+    //修改检查是否可以接受学生的方法
     const canAcceptStudent = (studentData) => {
       try {
-        // 如果有更高优先级志愿已被接受，不能接受
+        //如果有更高优先级志愿已被接受，不能接受
         if (hasHigherPreferenceAccepted(studentData)) {
           return false
         }
 
-        // 如果当前申请已被接受，不能再接受
+        //如果当前申请已被接受，不能再接受
         if (studentData.status === 'Accepted') {
           return false
         }
 
-        // 检查配额
+        //检查配额
         if (!quotaInfo.value) {
           console.warn('No quota info available')
           return false
         }
 
-        // 检查总体配额
+        //检查总体配额
         if (quotaInfo.value.overall.remaining_quota <= 0) {
           return false
         }
 
-        // 如果有学科特定配额，则检查
+        //如果有学科特定配额，则检查
         const parentSubjectId = studentData.parent_subject_id
         if (parentSubjectId && quotaInfo.value.by_subject) {
           const parentQuota = quotaInfo.value.by_subject[parentSubjectId]
@@ -244,7 +244,7 @@ export default {
       }
     }
 
-    // 处理接受学生
+    //处理接受学生
     const handleAccept = async (studentData) => {
       try {
         await ElMessageBox.confirm('确定接受该学生吗？', '确认操作', {
@@ -269,7 +269,7 @@ export default {
         const data = await response.json()
         if (data.status === 'success') {
           ElMessage.success('已接受该学生')
-          await fetchData()  // 重新获取最新数据
+          await fetchData()  //重新获取最新数据
         } else {
           ElMessage.error(data.message || '操作失败')
         }
@@ -281,7 +281,7 @@ export default {
       }
     }
 
-    // 处理拒绝学生
+    //处理拒绝学生
     const handleReject = async (studentData) => {
       try {
         await ElMessageBox.confirm('确定拒绝该学生吗？', '确认操作', {
@@ -311,7 +311,7 @@ export default {
         const data = await response.json()
         if (data.status === 'success') {
           ElMessage.success('已拒绝该学生')
-          await fetchData()  // 重新获取最新数据
+          await fetchData()  //重新获取最新数据
         } else {
           ElMessage.error(data.message || '操作失败')
         }
@@ -331,7 +331,7 @@ export default {
       studentList,
       quotaInfo,
       canAcceptStudent,
-      hasHigherPreferenceAccepted,  // 导出新方法
+      hasHigherPreferenceAccepted,  //导出新方法
       handleAccept,
       handleReject
     }

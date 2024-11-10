@@ -28,7 +28,7 @@ class ApplicantService:
         applicant = self.applicant_dao.find_by_applicant_id(applicant_id)
         if not applicant:
             return False
-        # 假设密码是身份证后8位
+        #密码是身份证后8位
         return applicant.id_card_number[-8:] == password
     
     def get_basic_info(self, applicant_id: int) -> Optional[Dict]:
