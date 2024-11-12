@@ -10,6 +10,43 @@ The system builds multiple core table structures, fully designs and implements t
 
 This project has not been fully developed and is very crude. We have not yet deployed it to the server. Please use the local view.
 
+**LoginPage**
+![alt text](/Pictures/login.png)
+
+**DashboardPage**
+![alt text](/Pictures/dashborad.png)
+
+**CatlogPage**
+![alt text](/Pictures/catlog1.png)
+
+![alt text](/Pictures/catlog2.png)
+
+**StudentBasicInfoPage**
+![alt text](/Pictures/basicinfo.png)
+
+**MentorBasicInfoPage**
+![alt text](/Pictures/MbasicInfo.png)
+
+**ScoreQueryPage**
+![alt text](/Pictures/scorequery.png)
+
+**VolunteersSubmitPage**
+![alt text](/Pictures/volunteers1.png)
+
+![alt text](/Pictures/volunteers2.png)
+
+**AdmissionStatusPage**
+![alt text](/Pictures/AdmissionStatus.png)
+
+**MentorSelectStudentPage**
+![alt text](/Pictures/StudentAdmission.png)
+
+**AllStudentViewPage**
+![alt text](/Pictures/allstudent.png)
+
+**AdmittedStudentsPage**
+![alt text](/Pictures/doneconfirm.png)
+
 ## Table of Contents
 
 - [Analyze](#analyze)
