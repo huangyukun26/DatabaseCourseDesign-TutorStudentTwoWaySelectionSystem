@@ -1,4 +1,4 @@
-# 2024 BJFU Database Course Design
+# 2024 BJFU Database Course Design -- Tutor-Student Two-Way Selection System
 
 ## Introduction
 
