@@ -68,7 +68,7 @@ This project has not been fully developed and is very crude. We have not yet dep
 ##### Environment
 
 ```
-git clone https://github.com/huangyukun26/BJFU-Database-Course-Design.git
+git clone https://github.com/huangyukun26/DatabaseCourseDesign-TutorStudentTwoWaySelectionSystem.git
 -- It is recommended to use a virtual conda environment
 cd Source
 conda env create -f environment.yaml
