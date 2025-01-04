@@ -49,19 +49,10 @@ This project has not been fully developed and is very crude. We have not yet dep
 
 ## Table of Contents
 
-- [Analyze](#analyze)
-- [Design](#design)
 - [Usage](#usage)
 - [Development](#development)
 - [Contribute](#contribute)
 
-## Analyze
-
-[(Back to top)](#table-of-contents)
-
-## Design
-
-[(Back to top)](#table-of-contents)
 
 ## Usage
 
